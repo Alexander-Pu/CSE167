@@ -4,6 +4,7 @@
 #include "main.h"
 #include "shader.h"
 #include "Object.h"
+#include "PointFileReader.h"
 #include "Cube.h"
 #include "PointCloud.h"
 
@@ -16,9 +17,15 @@ public:
 	static int height;
 	static const char* windowTitle;
 
+	// PointFileReader
+	static PointFileReader* pointFileReader;
+
 	// Objects to Render
 	static Cube* cube;
-	static PointCloud * cubePoints;
+	static GLfloat pointSize;
+	static PointCloud* bunnyPointCloud;
+	static PointCloud* sandalPointCloud;
+	static PointCloud* bearPointCloud;
 
 	// Camera Matrices
 	static glm::mat4 projection;
@@ -43,6 +50,7 @@ public:
 
 	// Callbacks
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void handleSizeChange();
 };
 
 #endif

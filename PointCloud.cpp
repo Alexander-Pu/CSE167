@@ -1,24 +1,10 @@
 #include "PointCloud.h"
 
 
-PointCloud::PointCloud(std::string objFilename, GLfloat pointSize) 
+PointCloud::PointCloud(std::vector<glm::vec3> inputPoints, GLfloat pointSize)
 	: pointSize(pointSize)
 {
-	/* 
-	 * TODO: Section 2: Currently, all the points are hard coded below. 
-	 * Modify this to read points from an obj file.
-	 */
-	
-	points = {
-		glm::vec3(-2.5, 2.5, 2.5),
-		glm::vec3(-2.5, -2.5, 2.5),
-		glm::vec3(2.5, -2.5, 2.5),
-		glm::vec3(2.5, 2.5, 2.5),
-		glm::vec3(-2.5, 2.5, -2.5),
-		glm::vec3(-2.5, -2.5, -2.5),
-		glm::vec3(2.5, -2.5, -2.5),
-		glm::vec3(2.5, 2.5, -2.5)
-	};
+	points = inputPoints;
 
 	/*
 	 * TODO: Section 4, you will need to normalize the object to fit in the
@@ -29,7 +15,7 @@ PointCloud::PointCloud(std::string objFilename, GLfloat pointSize)
 	model = glm::mat4(1);
 
 	// Set the color. 
-	color = glm::vec3(1, 0, 0);
+	color = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	// Generate a Vertex Array (VAO) and Vertex Buffer Object (VBO)
 	glGenVertexArrays(1, &VAO);
@@ -59,7 +45,7 @@ PointCloud::~PointCloud()
 
 void PointCloud::draw(const glm::mat4& view, const glm::mat4& projection, GLuint shader)
 {
-	// Actiavte the shader program 
+	// Activate the shader program 
 	glUseProgram(shader);
 
 	// Get the shader variable locations and send the uniform data to the shader 
@@ -90,9 +76,8 @@ void PointCloud::update()
 
 void PointCloud::updatePointSize(GLfloat size) 
 {
-	/*
-	 * TODO: Section 3: Implement this function to adjust the point size.
-	 */
+	pointSize = size;
+	std::cout << "Updating point size to [" << size << "]" << std::endl;
 }
 
 void PointCloud::spin(float deg)

@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -17,7 +18,7 @@ private:
 	GLfloat pointSize;
 
 public:
-	PointCloud(std::string objFilename, GLfloat pointSize);
+	PointCloud(std::vector<glm::vec3> points, GLfloat pointSize);
 	~PointCloud();
 	
 	void draw(const glm::mat4& view, const glm::mat4& projection, GLuint shader);

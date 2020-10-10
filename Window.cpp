@@ -7,8 +7,12 @@ int Window::height;
 const char* Window::windowTitle = "GLFW Starter Project";
 
 // Objects to Render
-Cube * Window::cube;
-PointCloud * Window::cubePoints;
+PointFileReader* Window::pointFileReader;
+Cube* Window::cube;
+GLfloat Window::pointSize;
+PointCloud* Window::bunnyPointCloud;
+PointCloud* Window::sandalPointCloud;
+PointCloud* Window::bearPointCloud;
 Object* currObj;
 
 // Camera Matrices 
@@ -42,11 +46,23 @@ bool Window::initializeProgram() {
 
 bool Window::initializeObjects()
 {
+	// Create the point file reader.
+	pointFileReader = new PointFileReader();
+
 	// Create a cube of size 5.
 	cube = new Cube(5.0f);
 
-	// Create a point cloud consisting of cube vertices.
-	cubePoints = new PointCloud("foo", 100);
+	// Create point clouds of objects.
+	pointSize = 100.0;
+
+	std::vector<glm::vec3> bunnyPoints = pointFileReader->readFile("Objects/bunny.obj");
+	bunnyPointCloud = new PointCloud(bunnyPoints, pointSize);
+
+	std::vector<glm::vec3> sandalPoints = pointFileReader->readFile("Objects/sandal.obj");
+	sandalPointCloud = new PointCloud(sandalPoints, pointSize);
+
+	std::vector<glm::vec3> bearPoints = pointFileReader->readFile("Objects/bear.obj");
+	bearPointCloud = new PointCloud(bearPoints, pointSize);
 
 	// Set cube to be the first to display
 	currObj = cube;
@@ -56,9 +72,12 @@ bool Window::initializeObjects()
 
 void Window::cleanUp()
 {
-	// Deallcoate the objects.
+	// Deallocate the objects.
+	delete pointFileReader;
 	delete cube;
-	delete cubePoints;
+	delete bunnyPointCloud;
+	delete sandalPointCloud;
+	delete bearPointCloud;
 
 	// Delete the shader program.
 	glDeleteProgram(shaderProgram);
@@ -161,10 +180,6 @@ void Window::displayCallback(GLFWwindow* window)
 
 void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	/*
-	 * TODO: Modify below to add your key callbacks.
-	 */
-	
 	// Check for a key press.
 	if (action == GLFW_PRESS)
 	{
@@ -172,19 +187,47 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 		{
 		case GLFW_KEY_ESCAPE:
 			// Close the window. This causes the program to also terminate.
-			glfwSetWindowShouldClose(window, GL_TRUE);				
+			glfwSetWindowShouldClose(window, GL_TRUE);
 			break;
 
-		// switch between the cube and the cube pointCloud
+			// switch between the shapes
 		case GLFW_KEY_1:
 			currObj = cube;
+			std::cout << "Switched to cube" << std::endl;
 			break;
 		case GLFW_KEY_2:
-			currObj = cubePoints;
+			currObj = bunnyPointCloud;
+			std::cout << "Switched to bunny" << std::endl;
 			break;
-
+		case GLFW_KEY_3:
+			currObj = sandalPointCloud;
+			std::cout << "Switched to sandal" << std::endl;
+			break;
+		case GLFW_KEY_4:
+			currObj = bearPointCloud;
+			std::cout << "Switched to bear" << std::endl;
+			break;
+		case GLFW_KEY_I:
+			pointSize += 100;
+			handleSizeChange();
+			break;
+		case GLFW_KEY_S:
+			if (pointSize > 100) {
+				pointSize -= 100;
+			}
+			else {
+				std::cout << "Refusing to set point size less than 100" << std::endl;
+			}
+			handleSizeChange();
+			break;
 		default:
 			break;
 		}
 	}
+}
+
+void Window::handleSizeChange() {
+	bunnyPointCloud->updatePointSize(pointSize);
+	sandalPointCloud->updatePointSize(pointSize);
+	bearPointCloud->updatePointSize(pointSize);
 }
