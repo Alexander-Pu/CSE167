@@ -4,7 +4,7 @@
 #include "main.h"
 #include "shader.h"
 #include "Object.h"
-#include "PointFileReader.h"
+#include "PointCloudLoader.h"
 #include "Cube.h"
 #include "PointCloud.h"
 
@@ -17,11 +17,10 @@ public:
 	static int height;
 	static const char* windowTitle;
 
-	// PointFileReader
-	static PointFileReader* pointFileReader;
+	// PointCloudLoader
+	static PointCloudLoader* pointCloudLoader;
 
 	// Objects to Render
-	static Cube* cube;
 	static GLfloat pointSize;
 	static PointCloud* bunnyPointCloud;
 	static PointCloud* sandalPointCloud;
@@ -50,7 +49,7 @@ public:
 
 	// Callbacks
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	static void handleSizeChange();
+	static void handleSizeChange(GLfloat sizeDelta);
 };
 
 #endif

@@ -7,13 +7,12 @@ int Window::height;
 const char* Window::windowTitle = "GLFW Starter Project";
 
 // Objects to Render
-PointFileReader* Window::pointFileReader;
-Cube* Window::cube;
+PointCloudLoader* Window::pointCloudLoader;
 GLfloat Window::pointSize;
 PointCloud* Window::bunnyPointCloud;
 PointCloud* Window::sandalPointCloud;
 PointCloud* Window::bearPointCloud;
-Object* currObj;
+PointCloud* currPointCloud;
 
 // Camera Matrices 
 // Projection matrix:
@@ -47,25 +46,17 @@ bool Window::initializeProgram() {
 bool Window::initializeObjects()
 {
 	// Create the point file reader.
-	pointFileReader = new PointFileReader();
-
-	// Create a cube of size 5.
-	cube = new Cube(5.0f);
+	pointCloudLoader = new PointCloudLoader();
 
 	// Create point clouds of objects.
-	pointSize = 100.0;
+	bunnyPointCloud = pointCloudLoader->loadPointCloud("Objects/bunny.obj");
 
-	std::vector<glm::vec3> bunnyPoints = pointFileReader->readFile("Objects/bunny.obj");
-	bunnyPointCloud = new PointCloud(bunnyPoints, pointSize);
+	sandalPointCloud = pointCloudLoader->loadPointCloud("Objects/sandal.obj");
 
-	std::vector<glm::vec3> sandalPoints = pointFileReader->readFile("Objects/sandal.obj");
-	sandalPointCloud = new PointCloud(sandalPoints, pointSize);
-
-	std::vector<glm::vec3> bearPoints = pointFileReader->readFile("Objects/bear.obj");
-	bearPointCloud = new PointCloud(bearPoints, pointSize);
+	bearPointCloud = pointCloudLoader->loadPointCloud("Objects/bear.obj");
 
 	// Set cube to be the first to display
-	currObj = cube;
+	currPointCloud = bunnyPointCloud;
 
 	return true;
 }
@@ -73,8 +64,7 @@ bool Window::initializeObjects()
 void Window::cleanUp()
 {
 	// Deallocate the objects.
-	delete pointFileReader;
-	delete cube;
+	delete pointCloudLoader;
 	delete bunnyPointCloud;
 	delete sandalPointCloud;
 	delete bearPointCloud;
@@ -160,7 +150,7 @@ void Window::resizeCallback(GLFWwindow* window, int width, int height)
 void Window::idleCallback()
 {
 	// Perform any necessary updates here 
-	currObj->update();
+	currPointCloud->update();
 }
 
 void Window::displayCallback(GLFWwindow* window)
@@ -169,7 +159,7 @@ void Window::displayCallback(GLFWwindow* window)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
 	// Render the objects
-	currObj->draw(view, projection, shaderProgram);
+	currPointCloud->draw(view, projection, shaderProgram);
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -192,33 +182,22 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 
 			// switch between the shapes
 		case GLFW_KEY_1:
-			currObj = cube;
-			std::cout << "Switched to cube" << std::endl;
+			currPointCloud = bunnyPointCloud;
+			std::cout << "Displaying bunny" << std::endl;
 			break;
 		case GLFW_KEY_2:
-			currObj = bunnyPointCloud;
-			std::cout << "Switched to bunny" << std::endl;
+			currPointCloud = sandalPointCloud;
+			std::cout << "Displaying sandal" << std::endl;
 			break;
 		case GLFW_KEY_3:
-			currObj = sandalPointCloud;
-			std::cout << "Switched to sandal" << std::endl;
-			break;
-		case GLFW_KEY_4:
-			currObj = bearPointCloud;
-			std::cout << "Switched to bear" << std::endl;
+			currPointCloud = bearPointCloud;
+			std::cout << "Displaying bear" << std::endl;
 			break;
 		case GLFW_KEY_I:
-			pointSize += 100;
-			handleSizeChange();
+			handleSizeChange(1.0);
 			break;
 		case GLFW_KEY_S:
-			if (pointSize > 100) {
-				pointSize -= 100;
-			}
-			else {
-				std::cout << "Refusing to set point size less than 100" << std::endl;
-			}
-			handleSizeChange();
+			handleSizeChange(-1.0);
 			break;
 		default:
 			break;
@@ -226,8 +205,14 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 	}
 }
 
-void Window::handleSizeChange() {
-	bunnyPointCloud->updatePointSize(pointSize);
-	sandalPointCloud->updatePointSize(pointSize);
-	bearPointCloud->updatePointSize(pointSize);
+void Window::handleSizeChange(GLfloat sizeDelta) {
+	GLfloat currPointSize = currPointCloud->getPointSize();
+	GLfloat newPointSize = currPointSize + sizeDelta;
+
+	if (newPointSize > 0.0) {
+		currPointCloud->updatePointSize(newPointSize);
+		std::cout << "Altered pointSize by " << sizeDelta << std::endl;
+	} else {
+		std::cout << "Refusing to set pointSize to <= 0" << std::endl;
+	}
 }

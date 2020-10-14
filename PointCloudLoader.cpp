@@ -1,18 +1,18 @@
-#include "PointFileReader.h"
+#include "PointCloudLoader.h"
 
-PointFileReader::PointFileReader()
+PointCloudLoader::PointCloudLoader()
 {
 }
 
-PointFileReader::~PointFileReader()
+PointCloudLoader::~PointCloudLoader()
 {
 }
 
 /*
-* Reads a given file of glm::vec3 points and returns it as a vector.
+* Reads a given file of glm::vec3 points and returns PointCloud.
 * Assumes that the file is properly formatted.
 */
-std::vector<glm::vec3> PointFileReader::readFile(const std::string objFileName)
+PointCloud* PointCloudLoader::loadPointCloud(const std::string objFileName)
 {
 	std::ifstream objFile(objFileName);
 	std::vector<glm::vec3> points;
@@ -46,5 +46,7 @@ std::vector<glm::vec3> PointFileReader::readFile(const std::string objFileName)
 
 	objFile.close();
 
-	return points;
+	GLfloat defaultPointSize = 1.0;
+
+	return new PointCloud(points, defaultPointSize);
 }

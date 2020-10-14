@@ -113,7 +113,7 @@
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PointCloud.cpp" />
-    <ClCompile Include="PointFileReader.cpp" />
+    <ClCompile Include="PointCloudLoader.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -122,7 +122,7 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="PointCloud.h" />
-    <ClInclude Include="PointFileReader.h" />
+    <ClInclude Include="PointCloudLoader.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>

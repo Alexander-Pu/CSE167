@@ -74,6 +74,10 @@ void PointCloud::update()
 	spin(0.1f);
 }
 
+GLfloat PointCloud::getPointSize() {
+	return pointSize;
+}
+
 void PointCloud::updatePointSize(GLfloat size) 
 {
 	pointSize = size;

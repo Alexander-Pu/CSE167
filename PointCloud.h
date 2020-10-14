@@ -24,6 +24,7 @@ public:
 	void draw(const glm::mat4& view, const glm::mat4& projection, GLuint shader);
 	void update();
 
+	GLfloat getPointSize();
 	void updatePointSize(GLfloat size);
 	void spin(float deg);
 };

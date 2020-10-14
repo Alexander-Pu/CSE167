@@ -30,7 +30,7 @@
     <ClCompile Include="Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PointFileReader.cpp">
+    <ClCompile Include="PointCloudLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +53,7 @@
     <ClInclude Include="Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PointFileReader.h">
+    <ClInclude Include="PointCloudLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
