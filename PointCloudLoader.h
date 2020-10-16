@@ -10,6 +10,8 @@
 
 class PointCloudLoader
 {
+private:
+	GLfloat getMidpoint(const GLfloat min, const GLfloat max);
 
 public:
 	PointCloudLoader();
