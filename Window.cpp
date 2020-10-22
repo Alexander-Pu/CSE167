@@ -30,6 +30,7 @@ GLuint Window::shaderProgram;
 
 
 bool Window::initializeProgram() {
+
 	// Create a shader program with a vertex shader and a fragment shader.
 	shaderProgram = LoadShaders("shaders/shader.vert", "shaders/shader.frag");
 

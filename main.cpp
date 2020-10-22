@@ -31,6 +31,9 @@ void setup_opengl_settings()
 
 	// Set clear color to black.
 	glClearColor(0.0, 0.0, 0.0, 0.0);
+
+	// Enable point size manipulation
+	glEnable(GL_PROGRAM_POINT_SIZE);
 }
 
 void print_versions()

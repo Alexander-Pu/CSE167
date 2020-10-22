@@ -75,7 +75,7 @@ PointCloud* PointCloudLoader::loadPointCloud(const std::string objFileName)
 	}
 
 	// Magic numbers. Declared here instead of as constants in the file due to laziness
-	GLfloat defaultPointSize = 1.0;
+	GLfloat defaultPointSize = 5.0;
 	// These can technically be determined by using Z offset and FOV, but I don't know how to do that yet.
 	GLfloat boundingDimension = 6.0;
 

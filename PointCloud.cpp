@@ -48,11 +48,20 @@ void PointCloud::draw(const glm::mat4& view, const glm::mat4& projection, GLuint
 	// Activate the shader program 
 	glUseProgram(shader);
 
+	// Get eyePos from view matrix
+	glm::vec4 eyePos = glm::vec4(-view[3][0], -view[3][1], -view[3][2], 1.0f);
+
+	// Get focalLength from projection matrix
+	GLfloat focalLength = projection[0][0];
+
 	// Get the shader variable locations and send the uniform data to the shader 
 	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	glUniform3fv(glGetUniformLocation(shader, "color"), 1, glm::value_ptr(color));
+	glUniform4fv(glGetUniformLocation(shader, "eyePos"), 1, glm::value_ptr(eyePos));
+	glUniform1f(glGetUniformLocation(shader, "focalLength"), focalLength);
+	glUniform1f(glGetUniformLocation(shader, "origPointSize"), pointSize);
 
 	// Bind the VAO
 	glBindVertexArray(VAO);
