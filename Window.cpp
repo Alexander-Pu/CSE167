@@ -50,11 +50,11 @@ bool Window::initializeObjects()
 	pointCloudLoader = new PointCloudLoader();
 
 	// Create point clouds of objects.
-	bunnyPointCloud = pointCloudLoader->loadPointCloud("Objects/bunny.obj");
+	bunnyPointCloud = pointCloudLoader->loadPointCloud("Objects/bunny.objmodel");
 
-	sandalPointCloud = pointCloudLoader->loadPointCloud("Objects/sandal.obj");
+	sandalPointCloud = pointCloudLoader->loadPointCloud("Objects/sandal.objmodel");
 
-	bearPointCloud = pointCloudLoader->loadPointCloud("Objects/bear.obj");
+	bearPointCloud = pointCloudLoader->loadPointCloud("Objects/bear.objmodel");
 
 	// Set cube to be the first to display
 	currPointCloud = bunnyPointCloud;
