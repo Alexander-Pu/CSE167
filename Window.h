@@ -4,9 +4,9 @@
 #include "main.h"
 #include "shader.h"
 #include "Object.h"
-#include "PointCloudLoader.h"
+#include "TriangleFacedModelLoader.h"
 #include "Cube.h"
-#include "PointCloud.h"
+#include "TriangleFacedModel.h"
 
 class Window
 {
@@ -17,14 +17,14 @@ public:
 	static int height;
 	static const char* windowTitle;
 
-	// PointCloudLoader
-	static PointCloudLoader* pointCloudLoader;
+	// TriangleFacedModelLoader
+	static TriangleFacedModelLoader* triangleFacedModelLoader;
 
 	// Objects to Render
 	static GLfloat pointSize;
-	static PointCloud* bunnyPointCloud;
-	static PointCloud* sandalPointCloud;
-	static PointCloud* bearPointCloud;
+	static TriangleFacedModel* bunnyTriangleFacedModel;
+	static TriangleFacedModel* sandalTriangleFacedModel;
+	static TriangleFacedModel* bearTriangleFacedModel;
 
 	// Camera Matrices
 	static glm::mat4 projection;
@@ -49,7 +49,6 @@ public:
 
 	// Callbacks
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	static void handleSizeChange(GLfloat sizeDelta);
 };
 
 #endif

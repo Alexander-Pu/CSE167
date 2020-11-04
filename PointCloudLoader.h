@@ -1,5 +1,5 @@
-#ifndef _POINT_FILE_READER_H_
-#define _POINT_FILE_READER_H_
+#ifndef _POINT_FILE_LOADER_H_
+#define _POINT_FILE_LOADER_H_
 
 #include "PointCloud.h"
 

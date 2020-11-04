@@ -6,11 +6,6 @@ PointCloud::PointCloud(std::vector<glm::vec3> inputPoints, GLfloat pointSize)
 {
 	points = inputPoints;
 
-	/*
-	 * TODO: Section 4, you will need to normalize the object to fit in the
-	 * screen. 
-	 */
-
 	// Set the model matrix to an identity matrix. 
 	model = glm::mat4(1);
 

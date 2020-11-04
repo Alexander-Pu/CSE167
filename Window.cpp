@@ -7,12 +7,12 @@ int Window::height;
 const char* Window::windowTitle = "GLFW Starter Project";
 
 // Objects to Render
-PointCloudLoader* Window::pointCloudLoader;
+TriangleFacedModelLoader* Window::triangleFacedModelLoader;
 GLfloat Window::pointSize;
-PointCloud* Window::bunnyPointCloud;
-PointCloud* Window::sandalPointCloud;
-PointCloud* Window::bearPointCloud;
-PointCloud* currPointCloud;
+TriangleFacedModel* Window::bunnyTriangleFacedModel;
+TriangleFacedModel* Window::sandalTriangleFacedModel;
+TriangleFacedModel* Window::bearTriangleFacedModel;
+TriangleFacedModel* currTriangleFacedModel;
 
 // Camera Matrices 
 // Projection matrix:
@@ -47,17 +47,17 @@ bool Window::initializeProgram() {
 bool Window::initializeObjects()
 {
 	// Create the point file reader.
-	pointCloudLoader = new PointCloudLoader();
+	triangleFacedModelLoader = new TriangleFacedModelLoader();
 
 	// Create point clouds of objects.
-	bunnyPointCloud = pointCloudLoader->loadPointCloud("Objects/bunny.objmodel");
+	bunnyTriangleFacedModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/bunny.objmodel");
 
-	sandalPointCloud = pointCloudLoader->loadPointCloud("Objects/sandal.objmodel");
+	sandalTriangleFacedModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/sandal.objmodel");
 
-	bearPointCloud = pointCloudLoader->loadPointCloud("Objects/bear.objmodel");
+	bearTriangleFacedModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/bear.objmodel");
 
 	// Set cube to be the first to display
-	currPointCloud = bunnyPointCloud;
+	currTriangleFacedModel = bunnyTriangleFacedModel;
 
 	return true;
 }
@@ -65,10 +65,10 @@ bool Window::initializeObjects()
 void Window::cleanUp()
 {
 	// Deallocate the objects.
-	delete pointCloudLoader;
-	delete bunnyPointCloud;
-	delete sandalPointCloud;
-	delete bearPointCloud;
+	delete triangleFacedModelLoader;
+	delete bunnyTriangleFacedModel;
+	delete sandalTriangleFacedModel;
+	delete bearTriangleFacedModel;
 
 	// Delete the shader program.
 	glDeleteProgram(shaderProgram);
@@ -151,7 +151,7 @@ void Window::resizeCallback(GLFWwindow* window, int width, int height)
 void Window::idleCallback()
 {
 	// Perform any necessary updates here 
-	currPointCloud->update();
+	currTriangleFacedModel->update();
 }
 
 void Window::displayCallback(GLFWwindow* window)
@@ -160,7 +160,7 @@ void Window::displayCallback(GLFWwindow* window)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
 	// Render the objects
-	currPointCloud->draw(view, projection, shaderProgram);
+	currTriangleFacedModel->draw(view, projection, shaderProgram);
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -183,37 +183,19 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 
 			// switch between the shapes
 		case GLFW_KEY_1:
-			currPointCloud = bunnyPointCloud;
+			currTriangleFacedModel = bunnyTriangleFacedModel;
 			std::cout << "Displaying bunny" << std::endl;
 			break;
 		case GLFW_KEY_2:
-			currPointCloud = sandalPointCloud;
+			currTriangleFacedModel = sandalTriangleFacedModel;
 			std::cout << "Displaying sandal" << std::endl;
 			break;
 		case GLFW_KEY_3:
-			currPointCloud = bearPointCloud;
+			currTriangleFacedModel = bearTriangleFacedModel;
 			std::cout << "Displaying bear" << std::endl;
-			break;
-		case GLFW_KEY_I:
-			handleSizeChange(1.0);
-			break;
-		case GLFW_KEY_S:
-			handleSizeChange(-1.0);
 			break;
 		default:
 			break;
 		}
-	}
-}
-
-void Window::handleSizeChange(GLfloat sizeDelta) {
-	GLfloat currPointSize = currPointCloud->getPointSize();
-	GLfloat newPointSize = currPointSize + sizeDelta;
-
-	if (newPointSize > 0.0) {
-		currPointCloud->updatePointSize(newPointSize);
-		std::cout << "Altered pointSize by " << sizeDelta << std::endl;
-	} else {
-		std::cout << "Refusing to set pointSize to <= 0" << std::endl;
 	}
 }
