@@ -34,7 +34,7 @@ glm::vec3 Window::lastPoint = glm::vec3(0.0);
 bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
-	shaderProgram = LoadShaders("shaders/shader.vert", "shaders/shader.frag");
+	shaderProgram = LoadShaders("shaders/normal.vert", "shaders/normal.frag");
 
 	// Check the shader program.
 	if (!shaderProgram)

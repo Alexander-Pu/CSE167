@@ -1,6 +1,5 @@
 #include "TriangleFacedModel.h"
 
-
 TriangleFacedModel::TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vector<glm::vec3> vertexNormals, std::vector<glm::uvec3> vertexIndexes, std::vector<glm::uvec3> vertexNormalIndexes)
 	: vertexes(vertexes)
 	, vertexNormals(vertexNormals)
@@ -17,22 +16,34 @@ TriangleFacedModel::TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vec
 
 	// Generate a vertex array (VAO) and vertex buffer object (VBO).
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+	glGenBuffers(2, &VBO[0]);
 
 	// Bind to the VAO.
 	glBindVertexArray(VAO);
 
 	// Bind VBO to the bound VAO, and store the vertex data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertexes.size(), vertexes.data(), GL_STATIC_DRAW);
+
 	// Enable Vertex Attribute 0 to pass the vertex data through to the shader
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
 	// Generate EBO, bind the EBO to the bound VAO, and send the index data
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glGenBuffers(2, &EBO[0]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::uvec3) * vertexIndexes.size(), vertexIndexes.data(), GL_STATIC_DRAW);
+
+	// Bind VBO to the bound VAO, and store the vertex normal data
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertexNormals.size(), vertexNormals.data(), GL_STATIC_DRAW);
+
+	// Enable Vertex Attribute 1 to pass the vertex normal data through to the shader
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+	// Generate EBO, bind the EBO to the bound VAO, and send the vertex normal index data
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::uvec3) * vertexNormalIndexes.size(), vertexNormalIndexes.data(), GL_STATIC_DRAW);
 
 	// Unbind the VBO/VAO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -42,7 +53,8 @@ TriangleFacedModel::TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vec
 TriangleFacedModel::~TriangleFacedModel() 
 {
 	// Delete the VBO and the VAO.
-	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(2, &VBO[0]);
+	glDeleteBuffers(2, &EBO[0]);
 	glDeleteVertexArrays(1, &VAO);
 }
 
@@ -61,7 +73,7 @@ void TriangleFacedModel::draw(const glm::mat4& view, const glm::mat4& projection
 	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(scaledModel));
-	glUniform3fv(glGetUniformLocation(shader, "color"), 1, glm::value_ptr(color));
+	//glUniformMatrix4fv(glGetUniformLocation(shader, "normalTranslationMatrix"), 1, GL_FALSE, glm::value_ptr(TriangleFacedModel::normalTransformationMatrix));
 
 	// Bind the VAO
 	glBindVertexArray(VAO);

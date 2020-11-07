@@ -20,7 +20,7 @@ private:
 	glm::mat4 rotation;
 
 	GLuint VAO;
-	GLuint VBO, EBO;
+	GLuint VBO[2], EBO[2];
 
 public:
 	TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vector<glm::vec3> vertexNormals, std::vector<glm::uvec3> vertexIndexes, std::vector<glm::uvec3> vertexNormalIndexes);
