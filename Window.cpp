@@ -27,7 +27,9 @@ glm::mat4 Window::view = glm::lookAt(Window::eyePos, Window::lookAtPoint, Window
 // Shader Program ID
 GLuint Window::shaderProgram; 
 
-
+// Default window state values
+bool Window::mouseRotation = false;
+glm::vec3 Window::lastPoint = glm::vec3(0.0);
 
 bool Window::initializeProgram() {
 
@@ -198,4 +200,64 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 			break;
 		}
 	}
+}
+
+void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	currTriangleFacedModel->scaleObject(yoffset);
+}
+
+void Window::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (action == GLFW_PRESS) {
+			std::cout << "PRESSED MOUSE LEFT" << std::endl;
+			Window::mouseRotation = true;
+			double mouseXPos;
+			double mouseYPos;
+			glfwGetCursorPos(window, &mouseXPos, &mouseYPos);
+			Window::lastPoint = trackBallMapping(mouseXPos, mouseYPos);
+		}
+		else if (action == GLFW_RELEASE) {
+			std::cout << "RELEASED MOUSE LEFT" << std::endl;
+			Window::mouseRotation = false;
+		}
+	}
+}
+
+void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
+{
+	// No longer track mouse movement outside of window
+	if (std::isnan(xpos) || std::isnan(ypos)) {
+		return;
+	}
+
+	if (Window::mouseRotation) {
+		glm::vec3 currPoint = trackBallMapping(xpos, ypos);
+		glm::vec3 direction = currPoint - Window::lastPoint;
+		GLfloat velocity = glm::length(direction);
+		if (velocity > .0001) {
+			glm::vec3 rotationAxis = glm::cross(Window::lastPoint, currPoint);
+			GLfloat angle = glm::acos(glm::dot(Window::lastPoint, currPoint));
+
+			// Ensure valid angle and rotation axis
+			if (!std::isnan(angle) && glm::length(rotationAxis) != 0) {
+				currTriangleFacedModel->rotateObject(angle, rotationAxis);
+			}
+		}
+		Window::lastPoint = currPoint;
+	}
+}
+
+glm::vec3 Window::trackBallMapping(double mouseXPos, double mouseYPos)
+{
+	glm::vec3 mouseProjectedVector;
+	GLfloat distanceFromOrigin;
+	mouseProjectedVector.x = (2.0f * mouseXPos - Window::width) / Window::width;
+	mouseProjectedVector.y = (Window::height - 2.0f * mouseYPos) / Window::height;
+	mouseProjectedVector.z = 0.0f;
+	distanceFromOrigin = glm::length(mouseProjectedVector);
+	distanceFromOrigin = glm::min(distanceFromOrigin, 1.0f);
+	mouseProjectedVector.z = glm::sqrt(1.001f - distanceFromOrigin * distanceFromOrigin);
+	return glm::normalize(mouseProjectedVector);
 }

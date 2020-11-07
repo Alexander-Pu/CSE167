@@ -6,6 +6,8 @@ TriangleFacedModel::TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vec
 	, vertexNormals(vertexNormals)
 	, vertexIndexes(vertexIndexes)
 	, vertexNormalIndexes(vertexNormalIndexes)
+	, scale(1.0f)
+	, rotation(glm::mat4(1))
 {
 	// Set the model matrix to an identity matrix. 
 	model = glm::mat4(1);
@@ -49,10 +51,16 @@ void TriangleFacedModel::draw(const glm::mat4& view, const glm::mat4& projection
 	// Activate the shader program 
 	glUseProgram(shader);
 
+	// Rotate model
+	glm::highp_mat4 rotatedModel = model * rotation;
+
+	// Compute scaled model
+	glm::highp_mat4 scaledModel = glm::scale(glm::vec3(scale)) * rotatedModel;
+
 	// Get the shader variable locations and send the uniform data to the shader 
 	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, glm::value_ptr(projection));
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(scaledModel));
 	glUniform3fv(glGetUniformLocation(shader, "color"), 1, glm::value_ptr(color));
 
 	// Bind the VAO
@@ -68,8 +76,22 @@ void TriangleFacedModel::draw(const glm::mat4& view, const glm::mat4& projection
 
 void TriangleFacedModel::update()
 {
-	// Spin the cube by 1 degree
-	spin(0.1f);
+}
+
+void TriangleFacedModel::scaleObject(double delta)
+{
+	scale += delta;
+
+	// Set minimum size
+	if (scale <= 0.1f) {
+		scale = 0.1f;
+	}
+}
+
+// Rotates the object based on world space
+void TriangleFacedModel::rotateObject(GLfloat radians, glm::vec3 axis)
+{
+	rotation = glm::rotate(radians, axis) * rotation;
 }
 
 void TriangleFacedModel::spin(float deg)

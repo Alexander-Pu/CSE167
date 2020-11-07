@@ -16,6 +16,8 @@ private:
 	std::vector<glm::vec3> vertexNormals;
 	std::vector<glm::uvec3> vertexIndexes;
 	std::vector<glm::uvec3> vertexNormalIndexes;
+	GLfloat scale;
+	glm::mat4 rotation;
 
 	GLuint VAO;
 	GLuint VBO, EBO;
@@ -27,6 +29,8 @@ public:
 	void draw(const glm::mat4& view, const glm::mat4& projection, GLuint shader);
 	void update();
 
+	void scaleObject(double delta);
+	void rotateObject(GLfloat radians, glm::vec3 axis);
 	void spin(float deg);
 };
 

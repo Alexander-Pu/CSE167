@@ -10,6 +10,12 @@
 
 class Window
 {
+private:
+	// Window state values
+	static bool mouseRotation;
+	static glm::vec3 lastPoint;
+
+	static glm::vec3 trackBallMapping(double mouseXPos, double mouseYPos);
 public:
 
 	// Window Properties
@@ -49,6 +55,9 @@ public:
 
 	// Callbacks
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+	static void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos);
 };
 
 #endif
