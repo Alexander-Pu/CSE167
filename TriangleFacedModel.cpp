@@ -7,6 +7,9 @@ TriangleFacedModel::TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vec
 	, vertexNormalIndexes(vertexNormalIndexes)
 	, scale(1.0f)
 	, rotation(glm::mat4(1))
+	, location(glm::vec3(0.0))
+	, materials(NULL)
+	, useMaterials(true)
 {
 	// Set the model matrix to an identity matrix. 
 	model = glm::mat4(1);
@@ -69,11 +72,22 @@ void TriangleFacedModel::draw(const glm::mat4& view, const glm::mat4& projection
 	// Compute scaled model
 	glm::highp_mat4 scaledModel = glm::scale(glm::vec3(scale)) * rotatedModel;
 
+	// Translate the model
+	glm::highp_mat4 translatedModel = glm::translate(location) * scaledModel;
+
+	// Generate separate normal model
+	glm::highp_mat3 normalModel = glm::highp_mat3(glm::transpose(glm::inverse(translatedModel)));
+
 	// Get the shader variable locations and send the uniform data to the shader 
 	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, glm::value_ptr(projection));
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(scaledModel));
-	//glUniformMatrix4fv(glGetUniformLocation(shader, "normalTranslationMatrix"), 1, GL_FALSE, glm::value_ptr(TriangleFacedModel::normalTransformationMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(translatedModel));
+	glUniformMatrix3fv(glGetUniformLocation(shader, "normalModel"), 1, GL_FALSE, glm::value_ptr(normalModel));
+
+	// Send materials to shader
+	if (useMaterials && materials != NULL) {
+		materials->sendMatToShader(shader);
+	}
 
 	// Bind the VAO
 	glBindVertexArray(VAO);
@@ -86,8 +100,19 @@ void TriangleFacedModel::draw(const glm::mat4& view, const glm::mat4& projection
 	glUseProgram(0);
 }
 
-void TriangleFacedModel::update()
+void TriangleFacedModel::update() {
+
+}
+
+glm::vec3 TriangleFacedModel::getLocation()
 {
+	return location;
+}
+
+// Sets the location of the model in world space
+void TriangleFacedModel::setLocation(glm::vec3 coordinates)
+{
+	location = coordinates;
 }
 
 void TriangleFacedModel::scaleObject(double delta)
@@ -106,8 +131,14 @@ void TriangleFacedModel::rotateObject(GLfloat radians, glm::vec3 axis)
 	rotation = glm::rotate(radians, axis) * rotation;
 }
 
-void TriangleFacedModel::spin(float deg)
-{
-	// Update the model matrix by multiplying a rotation matrix
-	model = model * glm::rotate(glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
+Materials* TriangleFacedModel::getMaterials() {
+	return materials;
+}
+
+void TriangleFacedModel::setMaterials(Materials* newMaterials) {
+	materials = newMaterials;
+}
+
+void TriangleFacedModel::setUseMaterials(bool useMats) {
+	useMaterials = useMats;
 }

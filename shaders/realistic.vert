@@ -15,23 +15,14 @@ uniform mat3 normalModel;
 // Outputs of the vertex shader are the inputs of the same name of the fragment shader.
 // The default output, gl_Position, should be assigned something. You can define as many
 // extra outputs as you need.
-out vec3 color;
+out vec3 worldPosition;
+out vec3 worldNormal;
 
 void main()
 {
     // OpenGL maintains the D matrix so you only need to multiply by P, V (aka C inverse), and M
-    vec4 worldPosition = model * vec4(position, 1.0);
-    gl_Position = projection * view * worldPosition;
+    worldPosition = vec3(model * vec4(position, 1.0));
+    gl_Position = projection * view * vec4(worldPosition, 1.0);
 
-    // Set color based on vertex normal
-    // Matrices are reflected across diagonal due to column-major orientation.
-    mat4 add2Matrix = mat4(1.0, 0.0, 0.0, 0.0, 
-					       0.0, 1.0, 0.0, 0.0, 
-					       0.0, 0.0, 1.0, 0.0,  
-					       1.0, 1.0, 1.0, 1.0);
-	mat4 scaleHalfMatrix = mat4(0.5, 0.0, 0.0, 0.0, 
-				                0.0, 0.5, 0.0, 0.0, 
-				                0.0, 0.0, 0.5, 0.0, 
-				                0.0, 0.0, 0.0, 1.0);
-    color = vec3(scaleHalfMatrix * add2Matrix * vec4(normal, 1.0));
+    worldNormal = normalModel * normal;
 }

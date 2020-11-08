@@ -110,6 +110,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Materials.cpp" />
+    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="TriangleFacedModel.cpp" />
     <ClCompile Include="TriangleFacedModelLoader.cpp" />
     <ClCompile Include="Cube.cpp" />
@@ -120,6 +122,8 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Materials.h" />
+    <ClInclude Include="PointLight.h" />
     <ClInclude Include="TriangleFacedModel.h" />
     <ClInclude Include="TriangleFacedModelLoader.h" />
     <ClInclude Include="Cube.h" />

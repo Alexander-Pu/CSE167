@@ -7,6 +7,7 @@
 #include "TriangleFacedModelLoader.h"
 #include "Cube.h"
 #include "TriangleFacedModel.h"
+#include "PointLight.h"
 
 class Window
 {
@@ -32,13 +33,25 @@ public:
 	static TriangleFacedModel* sandalTriangleFacedModel;
 	static TriangleFacedModel* bearTriangleFacedModel;
 
+	// Materials
+	static Materials* shinyMat;
+	static Materials* diffuseMat;
+	static Materials* shinyAndDiffuseMat;
+
+	// Light
+	static glm::vec3 pointLightLocation;
+	static PointLight* pointLight;
+	static TriangleFacedModel* pointLightModel;
+	static Materials* lightMat;
+
 	// Camera Matrices
 	static glm::mat4 projection;
 	static glm::mat4 view;
 	static glm::vec3 eyePos, lookAtPoint, upVector;
 
 	// Shader Program ID
-	static GLuint shaderProgram;
+	static GLuint normalShaderProgram;
+	static GLuint realisticShaderProgram;
 
 	// Constructors and Destructors
 	static bool initializeProgram();

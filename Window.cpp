@@ -14,6 +14,18 @@ TriangleFacedModel* Window::sandalTriangleFacedModel;
 TriangleFacedModel* Window::bearTriangleFacedModel;
 TriangleFacedModel* currTriangleFacedModel;
 
+// Materials
+Materials* Window::shinyMat;
+Materials* Window::diffuseMat;
+Materials* Window::shinyAndDiffuseMat;
+
+// Light
+glm::vec3 Window::pointLightLocation;
+PointLight* Window::pointLight;
+TriangleFacedModel* Window::pointLightModel;
+Materials* Window::lightMat;
+
+
 // Camera Matrices 
 // Projection matrix:
 glm::mat4 Window::projection; 
@@ -25,7 +37,9 @@ glm::vec3 Window::upVector(0, 1, 0);		// The up direction of the camera.
 glm::mat4 Window::view = glm::lookAt(Window::eyePos, Window::lookAtPoint, Window::upVector);
 
 // Shader Program ID
-GLuint Window::shaderProgram; 
+GLuint Window::normalShaderProgram;
+GLuint Window::realisticShaderProgram;
+GLuint currentShader;
 
 // Default window state values
 bool Window::mouseRotation = false;
@@ -34,10 +48,12 @@ glm::vec3 Window::lastPoint = glm::vec3(0.0);
 bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
-	shaderProgram = LoadShaders("shaders/normal.vert", "shaders/normal.frag");
+	normalShaderProgram = LoadShaders("shaders/normal.vert", "shaders/normal.frag");
+	realisticShaderProgram = LoadShaders("shaders/realistic.vert", "shaders/realistic.frag");
+	currentShader = normalShaderProgram;
 
 	// Check the shader program.
-	if (!shaderProgram)
+	if (!(normalShaderProgram && realisticShaderProgram))
 	{
 		std::cerr << "Failed to initialize shader program" << std::endl;
 		return false;
@@ -51,15 +67,34 @@ bool Window::initializeObjects()
 	// Create the point file reader.
 	triangleFacedModelLoader = new TriangleFacedModelLoader();
 
-	// Create point clouds of objects.
+	// Create 3d models of objects.
 	bunnyTriangleFacedModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/bunny.objmodel");
-
 	sandalTriangleFacedModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/sandal.objmodel");
-
 	bearTriangleFacedModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/bear.objmodel");
 
-	// Set cube to be the first to display
+	// Set bunny to be the first to display
 	currTriangleFacedModel = bunnyTriangleFacedModel;
+
+	// Create the materials
+	shinyMat = new Materials(glm::vec3(0.3, 0.1, 0.1), glm::vec3(0.0), glm::vec3(1.0), 1024);
+	diffuseMat = new Materials(glm::vec3(0.1, 0.3, 0.1), glm::vec3(0.9), glm::vec3(0.0), 1.0);
+	shinyAndDiffuseMat = new Materials(glm::vec3(0.1, 0.1, 0.3), glm::vec3(0.9), glm::vec3(0.9), 1024);
+
+	// Assign default materials
+	bunnyTriangleFacedModel->setMaterials(shinyMat);
+	sandalTriangleFacedModel->setMaterials(diffuseMat);
+	bearTriangleFacedModel->setMaterials(shinyAndDiffuseMat);
+
+	// Create the point light
+	pointLightLocation = glm::vec3(3.0, 3.0, 6.0);
+	glm::vec3 lightColor = glm::vec3(0.6, 0.6, 0.8);
+	pointLight = new PointLight(pointLightLocation, lightColor, glm::vec3(0.0, 1.0, 0.0));
+	pointLight->sendLightToShader(realisticShaderProgram);
+	pointLightModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/sphere.objmodel");
+	pointLightModel->setLocation(pointLightLocation);
+	pointLightModel->scaleObject(-8);
+	lightMat = new Materials(lightColor, glm::vec3(0), glm::vec3(0), 0);
+	pointLightModel->setMaterials(lightMat);
 
 	return true;
 }
@@ -72,8 +107,19 @@ void Window::cleanUp()
 	delete sandalTriangleFacedModel;
 	delete bearTriangleFacedModel;
 
+	// Deallocate materials
+	delete shinyMat;
+	delete diffuseMat;
+	delete shinyAndDiffuseMat;
+
+	// Deallocate light.
+	delete pointLight;
+	delete pointLightModel;
+    delete lightMat;
+
 	// Delete the shader program.
-	glDeleteProgram(shaderProgram);
+	glDeleteProgram(normalShaderProgram);
+	glDeleteProgram(realisticShaderProgram);
 }
 
 GLFWwindow* Window::createWindow(int width, int height)
@@ -162,7 +208,8 @@ void Window::displayCallback(GLFWwindow* window)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
 	// Render the objects
-	currTriangleFacedModel->draw(view, projection, shaderProgram);
+	currTriangleFacedModel->draw(view, projection, currentShader);
+	pointLightModel->draw(view, projection, currentShader);
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -196,15 +243,35 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 			currTriangleFacedModel = bearTriangleFacedModel;
 			std::cout << "Displaying bear" << std::endl;
 			break;
+		case GLFW_KEY_N:
+			std::cout << "Switching shaders" << std::endl;
+			if (currentShader == normalShaderProgram) {
+				currentShader = realisticShaderProgram;
+			}
+			else {
+				currentShader = normalShaderProgram;
+			}
+			break;
 		default:
 			break;
+		}
+
+		if (currentShader == realisticShaderProgram) {
+			currTriangleFacedModel->setUseMaterials(true);
+			pointLightModel->setUseMaterials(true);
+		}
+		else {
+			currTriangleFacedModel->setUseMaterials(false);
+			pointLightModel->setUseMaterials(false);
 		}
 	}
 }
 
 void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	currTriangleFacedModel->scaleObject(yoffset);
+	// Scale the offset to allow for more granular control
+	float scalingFactor = 0.05;
+	currTriangleFacedModel->scaleObject(yoffset * scalingFactor);
 }
 
 void Window::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
