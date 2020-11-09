@@ -8,17 +8,20 @@
 #include "Cube.h"
 #include "TriangleFacedModel.h"
 #include "PointLight.h"
+#include "SpotLight.h"
 
 class Window
 {
 private:
 	// Window state values
 	static bool moveModel;
-	static bool moveLight;
+	static bool movePointLight;
+	static bool moveSpotLight;
 	static bool canMoveModel;
-	static bool canMoveLight;
-	static glm::vec3 lastPoint;
+	static bool canMovePointLight;
+	static bool canMoveSpotLight;
 
+	static glm::vec3 lastPoint;
 	static glm::vec3 trackBallMapping(double mouseXPos, double mouseYPos);
 public:
 
@@ -31,7 +34,6 @@ public:
 	static TriangleFacedModelLoader* triangleFacedModelLoader;
 
 	// Objects to Render
-	static GLfloat pointSize;
 	static TriangleFacedModel* bunnyTriangleFacedModel;
 	static TriangleFacedModel* sandalTriangleFacedModel;
 	static TriangleFacedModel* bearTriangleFacedModel;
@@ -42,10 +44,12 @@ public:
 	static Materials* shinyAndDiffuseMat;
 
 	// Light
-	static glm::vec3 pointLightLocation;
 	static PointLight* pointLight;
 	static TriangleFacedModel* pointLightModel;
-	static Materials* lightMat;
+	static Materials* pointLightMat;
+	static SpotLight* spotLight;
+	static TriangleFacedModel* spotLightModel;
+	static Materials* spotLightMat;
 
 	// Camera Matrices
 	static glm::mat4 projection;

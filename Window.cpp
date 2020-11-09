@@ -8,7 +8,6 @@ const char* Window::windowTitle = "GLFW Starter Project";
 
 // Objects to Render
 TriangleFacedModelLoader* Window::triangleFacedModelLoader;
-GLfloat Window::pointSize;
 TriangleFacedModel* Window::bunnyTriangleFacedModel;
 TriangleFacedModel* Window::sandalTriangleFacedModel;
 TriangleFacedModel* Window::bearTriangleFacedModel;
@@ -20,11 +19,12 @@ Materials* Window::diffuseMat;
 Materials* Window::shinyAndDiffuseMat;
 
 // Light
-glm::vec3 Window::pointLightLocation;
 PointLight* Window::pointLight;
 TriangleFacedModel* Window::pointLightModel;
-Materials* Window::lightMat;
-
+Materials* Window::pointLightMat;
+SpotLight* Window::spotLight;
+TriangleFacedModel* Window::spotLightModel;
+Materials* Window::spotLightMat;
 
 // Camera Matrices 
 // Projection matrix:
@@ -43,9 +43,11 @@ GLuint currentShader;
 
 // Default window state values
 bool Window::moveModel = false;
-bool Window::moveLight = false;
+bool Window::movePointLight = false;
+bool Window::moveSpotLight = false;
 bool Window::canMoveModel = true;
-bool Window::canMoveLight = false;
+bool Window::canMovePointLight = false;
+bool Window::canMoveSpotLight = false;
 glm::vec3 Window::lastPoint = glm::vec3(0.0);
 
 bool Window::initializeProgram() {
@@ -67,7 +69,7 @@ bool Window::initializeProgram() {
 
 bool Window::initializeObjects()
 {
-	// Create the point file reader.
+	// Create the model file reader.
 	triangleFacedModelLoader = new TriangleFacedModelLoader();
 
 	// Create 3d models of objects.
@@ -89,15 +91,29 @@ bool Window::initializeObjects()
 	bearTriangleFacedModel->setMaterials(shinyAndDiffuseMat);
 
 	// Create the point light
-	pointLightLocation = glm::vec3(3.0, 3.0, 6.0);
-	glm::vec3 lightColor = glm::vec3(0.6, 0.6, 0.8);
-	pointLight = new PointLight(pointLightLocation, lightColor, glm::vec3(0.0, 0.5, 0.0));
+	glm::vec3 pointLightLocation = glm::vec3(3.0, 3.0, 6.0);
+	glm::vec3 pointLightColor = glm::vec3(0.6, 0.6, 0.8);
+	pointLight = new PointLight(pointLightLocation, pointLightColor, glm::vec3(0.0, 0.5, 0.0));
 	pointLight->sendLightToShader(realisticShaderProgram);
 	pointLightModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/sphere.objmodel");
 	pointLightModel->setLocation(pointLightLocation);
 	pointLightModel->scaleObject(-8);
-	lightMat = new Materials(lightColor, glm::vec3(0), glm::vec3(0), 0);
-	pointLightModel->setMaterials(lightMat);
+	pointLightMat = new Materials(pointLightColor, glm::vec3(0), glm::vec3(0), 0);
+	pointLightModel->setMaterials(pointLightMat);
+
+	// Create the spot light
+	glm::vec3 spotLightLocation = glm::vec3(-3.0, 3.0, 6.0);
+	glm::vec3 spotLightColor = glm::vec3(0.8, 0.6, 0.6);
+	glm::vec3 spotLightDirection = glm::vec3() - spotLightLocation;
+	float spotLightCutoff = 0.5;
+	float spotLightExponent = 1.0;
+	spotLight = new SpotLight(spotLightLocation, spotLightColor, spotLightDirection, glm::vec3(0.0, 0.5, 0.0), spotLightCutoff, spotLightExponent);
+	spotLight->sendLightToShader(realisticShaderProgram);
+	spotLightModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/sphere.objmodel");
+	spotLightModel->setLocation(spotLightLocation);
+	spotLightModel->scaleObject(-8);
+	spotLightMat = new Materials(spotLightColor, glm::vec3(0), glm::vec3(0), 0);
+	spotLightModel->setMaterials(spotLightMat);
 
 	return true;
 }
@@ -118,7 +134,7 @@ void Window::cleanUp()
 	// Deallocate light.
 	delete pointLight;
 	delete pointLightModel;
-    delete lightMat;
+    delete pointLightMat;
 
 	// Delete the shader program.
 	glDeleteProgram(normalShaderProgram);
@@ -213,6 +229,7 @@ void Window::displayCallback(GLFWwindow* window)
 	// Render the objects
 	currTriangleFacedModel->draw(view, projection, currentShader);
 	pointLightModel->draw(view, projection, currentShader);
+	spotLightModel->draw(view, projection, currentShader);
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -258,17 +275,17 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 		case GLFW_KEY_4:
 			std::cout << "Mode 1" << std::endl;
 			Window::canMoveModel = true;
-			Window::canMoveLight = false;
+			Window::canMovePointLight = false;
 			break;
 		case GLFW_KEY_5:
 			std::cout << "Mode 2" << std::endl;
 			Window::canMoveModel = false;
-			Window::canMoveLight = true;
+			Window::canMovePointLight = true;
 			break;
 		case GLFW_KEY_6:
 			std::cout << "Mode 3" << std::endl;
 			Window::canMoveModel = true;
-			Window::canMoveLight = true;
+			Window::canMovePointLight = true;
 			break;
 		default:
 			break;
@@ -277,10 +294,12 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 		if (currentShader == realisticShaderProgram) {
 			currTriangleFacedModel->setUseMaterials(true);
 			pointLightModel->setUseMaterials(true);
+			spotLightModel->setUseMaterials(true);
 		}
 		else {
 			currTriangleFacedModel->setUseMaterials(false);
 			pointLightModel->setUseMaterials(false);
+			spotLightModel->setUseMaterials(false);
 		}
 	}
 }
@@ -294,7 +313,8 @@ void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	}
 
 	float movementFactor = 0.2;
-	if (Window::canMoveLight) {
+	if (Window::canMovePointLight) {
+		glm::vec3 pointLightLocation = pointLightModel->getLocation();
 		if (yoffset > 0) {
 			pointLightLocation += glm::vec3(glm::scale(glm::vec3(movementFactor)) * glm::vec4(glm::normalize(pointLightLocation), 1.0));
 		}
@@ -314,20 +334,20 @@ void Window::mouseButtonCallback(GLFWwindow* window, int button, int action, int
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
 		if (action == GLFW_PRESS) {
 			std::cout << "PRESSED MOUSE LEFT" << std::endl;
-			if (Window::canMoveModel || Window::canMoveLight) {
+			if (Window::canMoveModel || Window::canMovePointLight) {
 				double mouseXPos;
 				double mouseYPos;
 				glfwGetCursorPos(window, &mouseXPos, &mouseYPos);
 				Window::lastPoint = trackBallMapping(mouseXPos, mouseYPos);
 
 				Window::moveModel = Window::canMoveModel;
-				Window::moveLight = Window::canMoveLight;
+				Window::movePointLight = Window::canMovePointLight;
 			}
 		}
 		else if (action == GLFW_RELEASE) {
 			std::cout << "RELEASED MOUSE LEFT" << std::endl;
 			Window::moveModel = false;
-			Window::moveLight = false;
+			Window::movePointLight = false;
 		}
 	}
 }
@@ -339,7 +359,7 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 		return;
 	}
 
-	if (Window::moveModel || Window::moveLight) {
+	if (Window::moveModel || Window::movePointLight) {
 		glm::vec3 currPoint = trackBallMapping(xpos, ypos);
 		glm::vec3 direction = currPoint - Window::lastPoint;
 		GLfloat velocity = glm::length(direction);
@@ -353,7 +373,8 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 					currTriangleFacedModel->rotateObject(angle, rotationAxis);
 				}
 
-				if (Window::moveLight) {
+				if (Window::movePointLight) {
+					glm::vec3 pointLightLocation = pointLightModel->getLocation();
 					pointLightLocation = glm::vec3(glm::rotate(angle, rotationAxis) * glm::vec4(pointLightLocation, 1.0));
 					// Any movement to the light should update the light info in the shader
 					pointLightModel->setLocation(pointLightLocation);

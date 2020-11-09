@@ -15,20 +15,30 @@ uniform vec3 diffuse;
 uniform vec3 specular;
 uniform float shininess;
 
-// Light attributes
-uniform vec3 lightPos;
-uniform vec3 lightCol;
-uniform vec3 lightAtten;
+// Point light attributes
+uniform vec3 pointLightPos;
+uniform vec3 pointLightCol;
+uniform vec3 pointLightAtten;
+
+// Spot light attributes
+uniform vec3 spotLightPos;
+uniform vec3 spotLightCol;
+uniform vec3 spotLightDirection;
+uniform vec3 spotLightAtten;
+uniform float spotLightCutoff;
+uniform float spotLightExponent;
 
 // You can output many things. The first vec4 type output determines the color of the fragment
 out vec4 fragColor;
 
 void main()
 {
-    vec3 lightVectorNonNormalized = lightPos - worldPosition;
+    vec3 normalizedWorldNormal = normalize(worldNormal);
+
+    // Point light calculations
+    vec3 lightVectorNonNormalized = pointLightPos - worldPosition;
     vec3 lightVector = normalize(lightVectorNonNormalized);
 
-    vec3 normalizedWorldNormal = normalize(worldNormal);
     float lightDotNormal = dot(lightVector, normalizedWorldNormal);
 
     // Diffuse color
@@ -43,10 +53,27 @@ void main()
 
     // Attenuation
     float lightDistance = length(lightVectorNonNormalized);
-    vec3 attentuatedColor = lightCol / (lightAtten.z * pow(lightDistance, 2) + lightAtten.y * lightDistance + lightAtten.x);
+    vec3 attentuatedColor = pointLightCol / (pointLightAtten.z * pow(lightDistance, 2) + pointLightAtten.y * lightDistance + pointLightAtten.x);
 
-    // Summation of colors
-    vec3 totalColor = attentuatedColor * (diffuseColor + specularColor) + ambient;
+    // Summation of point light colors
+    vec3 pointLightTotalColor = attentuatedColor * (diffuseColor + specularColor) + ambient;
 
-    fragColor = vec4(totalColor, 1.0f);
+    // ------------------------------------------------------------------------------------------------------------
+    // Spot light calculations
+    vec3 spotLightVectorNonNormalized = spotLightPos - worldPosition;
+    vec3 spotLightVector = normalize(spotLightVectorNonNormalized);
+
+    vec3 spotLightDirectionOpposite = normalize(-spotLightDirection);
+
+    float spotLightIntensity = 0.0;
+    // Within cone
+    if (dot(spotLightVector, spotLightDirectionOpposite) > spotLightCutoff) {
+        spotLightIntensity = max(dot(normalizedWorldNormal, spotLightVector), 0.0);
+
+        if (spotLightIntensity > 0.0) {
+            
+        }
+    }
+
+    fragColor = vec4(pointLightTotalColor, 1.0f);
 }
