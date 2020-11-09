@@ -29,17 +29,17 @@ void main()
     vec3 lightVector = normalize(lightVectorNonNormalized);
 
     vec3 normalizedWorldNormal = normalize(worldNormal);
-    float lightDotNormal = clamp(dot(lightVector, normalizedWorldNormal), 0.0, 1.0);
+    float lightDotNormal = dot(lightVector, normalizedWorldNormal);
 
     // Diffuse color
-    vec3 diffuseColor = diffuse * lightDotNormal;
+    vec3 diffuseColor = diffuse * max(lightDotNormal, 0.0);
     
     // Specular color
     vec3 reflectionVector = (2 * lightDotNormal * normalizedWorldNormal) - lightVector;
     vec3 eyePos = vec3(-view[3][0], -view[3][1], -view[3][2]);
     vec3 eyeVector = normalize(eyePos - worldPosition);
 
-    vec3 specularColor = specular * pow(clamp(dot(reflectionVector, eyeVector), 0.0, 1.0), shininess); 
+    vec3 specularColor = specular * max(pow(dot(reflectionVector, eyeVector), shininess), 0.0); 
 
     // Attenuation
     float lightDistance = length(lightVectorNonNormalized);

@@ -23,3 +23,7 @@ void PointLight::sendLightToShader(const int shaderID) {
 
 	glUseProgram(0);
 }
+
+void PointLight::setPos(glm::vec3 newPos) {
+	pos = newPos;
+}

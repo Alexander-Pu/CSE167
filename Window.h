@@ -13,7 +13,10 @@ class Window
 {
 private:
 	// Window state values
-	static bool mouseRotation;
+	static bool moveModel;
+	static bool moveLight;
+	static bool canMoveModel;
+	static bool canMoveLight;
 	static glm::vec3 lastPoint;
 
 	static glm::vec3 trackBallMapping(double mouseXPos, double mouseYPos);
