@@ -17,13 +17,23 @@ void PointLight::sendLightToShader(const int shaderID) {
 	glUseProgram(shaderID);
 
 	// Get the shader variable locations and send the uniform data to the shader 
-	glUniform3fv(glGetUniformLocation(shaderID, "pointLightPos"), 1, glm::value_ptr(pos));
-	glUniform3fv(glGetUniformLocation(shaderID, "pointLightCol"), 1, glm::value_ptr(color));
-	glUniform3fv(glGetUniformLocation(shaderID, "pointLightAtten"), 1, glm::value_ptr(atten));
+	glUniform3fv(glGetUniformLocation(shaderID, "pl_pos"), 1, glm::value_ptr(pos));
+	glUniform3fv(glGetUniformLocation(shaderID, "pl_col"), 1, glm::value_ptr(color));
+	glUniform3fv(glGetUniformLocation(shaderID, "pl_atten"), 1, glm::value_ptr(atten));
 
 	glUseProgram(0);
 }
 
 void PointLight::setPos(glm::vec3 newPos) {
 	pos = newPos;
+}
+
+void PointLight::clear(const int shaderID) {
+	// Activate the shader program 
+	glUseProgram(shaderID);
+
+	// Set the color to 0.
+	glUniform3fv(glGetUniformLocation(shaderID, "pl_col"), 1, glm::value_ptr(glm::vec3(0.0)));
+
+	glUseProgram(0);
 }

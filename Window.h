@@ -20,6 +20,8 @@ private:
 	static bool canMoveModel;
 	static bool canMovePointLight;
 	static bool canMoveSpotLight;
+	static bool pointLightOn;
+	static bool spotLightOn;
 
 	static glm::vec3 lastPoint;
 	static glm::vec3 trackBallMapping(double mouseXPos, double mouseYPos);

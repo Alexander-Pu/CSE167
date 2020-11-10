@@ -18,6 +18,7 @@ public:
 	~SpotLight();
 
 	void sendLightToShader(const int shaderID);
+	void clear(const int shaderID);
 
 	void setPos(glm::vec3 pos);
 	void setDirection(glm::vec3 direction);
