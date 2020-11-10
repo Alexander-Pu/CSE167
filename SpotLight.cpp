@@ -38,12 +38,6 @@ void SpotLight::setDirection(glm::vec3 newDirection) {
 	direction = newDirection;
 }
 
-void SpotLight::clear(const int shaderID) {
-	// Activate the shader program 
-	glUseProgram(shaderID);
-
-	// Set the color to 0.
-	glUniform3fv(glGetUniformLocation(shaderID, "sl_col"), 1, glm::value_ptr(glm::vec3(0.0)));
-
-	glUseProgram(0);
+void SpotLight::setColor(glm::vec3 newColor) {
+	color = newColor;
 }

@@ -17,9 +17,9 @@ public:
 	~PointLight();
 
 	void sendLightToShader(const int shaderID);
-	void clear(const int shaderID);
 
-	void setPos(glm::vec3 pos);
+	void setPos(glm::vec3 newPos);
+	void setColor(glm::vec3 newColor);
 };
 
 #endif

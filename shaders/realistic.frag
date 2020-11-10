@@ -39,50 +39,53 @@ void main()
     
     // ------------------------------------------------------------------------------------------------------------
     // Point light calculations
+    vec3 pl_total = vec3(0.0, 0.0, 0.0);
     vec3 pl_vec_to_light = pl_pos - worldPosition;
     vec3 pl_vec_to_light_norm = normalize(pl_vec_to_light);
 
-    float pl_dot = dot(pl_vec_to_light_norm, normalizedWorldNormal);
-
-    // Diffuse color
-    vec3 pl_diffuse = diffuse * max(pl_dot, 0.0);
+    float pl_dot = max(dot(pl_vec_to_light_norm, normalizedWorldNormal), 0.0);
+    if (pl_dot > 0.0) {
+        // Diffuse color
+        vec3 pl_diffuse = diffuse * pl_dot;
     
-    // Specular color
-    vec3 pl_reflection = (2 * pl_dot * normalizedWorldNormal) - pl_vec_to_light_norm;
-    vec3 pl_specular = specular * max(pow(dot(pl_reflection, eyeVector), shininess), 0.0); 
+        // Specular color
+        vec3 pl_reflection = normalize((2 * pl_dot * normalizedWorldNormal) - pl_vec_to_light_norm);
+        vec3 pl_specular = specular * pow(max(dot(pl_reflection, eyeVector), 0.0), shininess); 
 
-    // Attenuation
-    float pl_distance = length(pl_vec_to_light);
-    vec3 pl_faded = pl_col  / (pl_atten.z * pow(pl_distance, 2) + pl_atten.y * pl_distance + pl_atten.x);
-    vec3 pl_total = pl_faded * (pl_diffuse + pl_specular);
+        // Attenuation
+        float pl_distance = length(pl_vec_to_light);
+        float pl_intensity = clamp(1.0 / (pl_atten.z * pow(pl_distance, 2) + pl_atten.y * pl_distance + pl_atten.x), 0.0, 1.0);
+        pl_total = pl_col * pl_intensity * (pl_diffuse + pl_specular);
+    }
 
     // ------------------------------------------------------------------------------------------------------------
     // Spot light calculations
+    vec3 sl_total = vec3(0, 0, 0);
     vec3 sl_vec_to_light = sl_pos - worldPosition;
     vec3 sl_vec_to_light_norm = normalize(sl_vec_to_light);
 
-    float sl_dot = dot(sl_vec_to_light_norm, normalizedWorldNormal);
-
-    // Diffuse color
-    vec3 sl_diffuse = diffuse * max(sl_dot, 0.0);
+    float sl_dot = max(dot(sl_vec_to_light_norm, normalizedWorldNormal), 0);
+    if (sl_dot > 0) {
+        // Diffuse color
+        vec3 sl_diffuse = diffuse * sl_dot;
     
-    // Specular color
-    vec3 sl_reflection = (2 * sl_dot * normalizedWorldNormal) - sl_vec_to_light_norm;
-    vec3 sl_specular = specular * max(pow(dot(sl_reflection, eyeVector), shininess), 0.0); 
+        // Specular color
+        vec3 sl_reflection = (2 * sl_dot * normalizedWorldNormal) - sl_vec_to_light_norm;
+        vec3 sl_specular = specular * pow(max(dot(sl_reflection, eyeVector), 0), shininess); 
            
-    float sl_intensity = 0.0;
-    vec3 sl_reverse_dir = -sl_dir;
-    float sl_dot_center = dot(sl_vec_to_light_norm, sl_reverse_dir);
-    // Within cone
-    if (acos(sl_dot_center) <= sl_cutoff) {
-        sl_intensity = pow(sl_dot_center, sl_exp);
-    }
-    vec3 sl_cone_col = sl_intensity * sl_col;
+        float sl_cone_intensity = 0.0;
+        vec3 sl_reverse_dir = -sl_dir;
+        float sl_dot_center = max(dot(sl_vec_to_light_norm, sl_reverse_dir), 0);
+        // Within cone
+        if (acos(sl_dot_center) <= sl_cutoff) {
+            sl_cone_intensity = pow(sl_dot_center, sl_exp);
+        }
 
-    // Attenuation
-    float sl_distance = length(sl_vec_to_light);
-    vec3 sl_faded = sl_cone_col  / (sl_atten.z * pow(sl_distance, 2) + sl_atten.y * sl_distance + sl_atten.x);
-    vec3 sl_total = sl_faded * (sl_diffuse + sl_specular);
+        // Attenuation
+        float sl_distance = length(sl_vec_to_light);
+        float sl_intensity = clamp(1.0 / (sl_atten.z * pow(sl_distance, 2) + sl_atten.y * sl_distance + sl_atten.x), 0, 1);
+        sl_total = sl_col * sl_intensity * sl_cone_intensity * (sl_diffuse + sl_specular);
+    }
 
     // ------------------------------------------------------------------------------------------------------------
     vec3 totalColor = (pl_total + sl_total + ambient);

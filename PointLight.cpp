@@ -28,12 +28,6 @@ void PointLight::setPos(glm::vec3 newPos) {
 	pos = newPos;
 }
 
-void PointLight::clear(const int shaderID) {
-	// Activate the shader program 
-	glUseProgram(shaderID);
-
-	// Set the color to 0.
-	glUniform3fv(glGetUniformLocation(shaderID, "pl_col"), 1, glm::value_ptr(glm::vec3(0.0)));
-
-	glUseProgram(0);
+void PointLight::setColor(glm::vec3 newColor) {
+	color = newColor;
 }

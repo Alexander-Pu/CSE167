@@ -102,7 +102,7 @@ bool Window::initializeObjects()
 	pointLightModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/sphere.objmodel");
 	pointLightModel->setLocation(pointLightLocation);
 	pointLightModel->scaleObject(-8);
-	pointLightMat = new Materials(pointLightColor, glm::vec3(0), glm::vec3(0), 0);
+	pointLightMat = new Materials(pointLightColor, glm::vec3(0.0), glm::vec3(0.0), 1.0);
 	pointLightModel->setMaterials(pointLightMat);
 
 	// Create the spot light
@@ -116,7 +116,7 @@ bool Window::initializeObjects()
 	spotLightModel = triangleFacedModelLoader->loadTriangleFacedModel("Objects/sphere.objmodel");
 	spotLightModel->setLocation(spotLightLocation);
 	spotLightModel->scaleObject(-8);
-	spotLightMat = new Materials(spotLightColor, glm::vec3(0), glm::vec3(0), 0);
+	spotLightMat = new Materials(spotLightColor, glm::vec3(0.0), glm::vec3(0.0), 1.0);
 	spotLightModel->setMaterials(spotLightMat);
 
 	return true;
@@ -305,22 +305,24 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 			Window::pointLightOn = !Window::pointLightOn;
 			std::cout << "PointLight: " << pointLightOn << std::endl;
 			if (Window::pointLightOn) {
-				pointLight->sendLightToShader(realisticShaderProgram);
+				pointLight->setColor(glm::vec3(0.6, 0.6, 0.8));
 			}
 			else {
-				pointLight->clear(realisticShaderProgram);
+				pointLight->setColor(glm::vec3(0.0));
 			}
+			pointLight->sendLightToShader(realisticShaderProgram);
 			break;
 		case GLFW_KEY_9:
 			std::cout << "Toggling spot light" << std::endl;
 			Window::spotLightOn = !Window::spotLightOn;
 			std::cout << "SpotLight: " << spotLightOn << std::endl;
 			if (Window::spotLightOn) {
-				spotLight->sendLightToShader(realisticShaderProgram);
+				spotLight->setColor(glm::vec3(0.8, 0.6, 0.6));
 			}
 			else {
-				spotLight->clear(realisticShaderProgram);
+				spotLight->setColor(glm::vec3(0.0));
 			}
+			spotLight->sendLightToShader(realisticShaderProgram);
 		default:
 			break;
 		}
@@ -359,9 +361,7 @@ void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 		// Any movement to the light should update the light info in the shader
 		pointLightModel->setLocation(pointLightLocation);
 		pointLight->setPos(pointLightLocation);
-		if (Window::pointLightOn) {
-			pointLight->sendLightToShader(currentShader);
-		}
+		pointLight->sendLightToShader(currentShader);
 	}
 
 	if (Window::canMoveSpotLight) {
@@ -376,9 +376,7 @@ void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 		// Any movement to the light should update the light info in the shader
 		spotLightModel->setLocation(spotLightLocation);
 		spotLight->setPos(spotLightLocation);
-		if (Window::spotLightOn) {
-			spotLight->sendLightToShader(currentShader);
-		}
+		spotLight->sendLightToShader(currentShader);
 	}
 }
 
@@ -434,9 +432,7 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 					// Any movement to the light should update the light info in the shader
 					pointLightModel->setLocation(pointLightLocation);
 					pointLight->setPos(pointLightLocation);
-					if (Window::pointLightOn) {
-						pointLight->sendLightToShader(currentShader);
-					}
+					pointLight->sendLightToShader(currentShader);
 				}
 
 				if (Window::moveSpotLight) {
@@ -445,9 +441,7 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 					// Any movement to the light should update the light info in the shader
 					spotLightModel->setLocation(spotLightLocation);
 					spotLight->setPos(spotLightLocation);
-					if (Window::spotLightOn) {
-						spotLight->sendLightToShader(currentShader);
-					}
+					spotLight->sendLightToShader(currentShader);
 					glm::vec3 newDir = glm::normalize(glm::vec3() - spotLightLocation);
 					spotLight->setDirection(newDir);
 				}
