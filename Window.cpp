@@ -26,6 +26,9 @@ SpotLight* Window::spotLight;
 TriangleFacedModel* Window::spotLightModel;
 Materials* Window::spotLightMat;
 
+// Skybox
+Skybox* Window::skybox;
+
 // Camera Matrices 
 // Projection matrix:
 glm::mat4 Window::projection; 
@@ -39,6 +42,7 @@ glm::mat4 Window::view = glm::lookAt(Window::eyePos, Window::lookAtPoint, Window
 // Shader Program ID
 GLuint Window::normalShaderProgram;
 GLuint Window::realisticShaderProgram;
+GLuint Window::skyboxShaderProgram;
 GLuint currentShader;
 
 // Default window state values
@@ -57,6 +61,7 @@ bool Window::initializeProgram() {
 	// Create a shader program with a vertex shader and a fragment shader.
 	normalShaderProgram = LoadShaders("shaders/normal.vert", "shaders/normal.frag");
 	realisticShaderProgram = LoadShaders("shaders/realistic.vert", "shaders/realistic.frag");
+	skyboxShaderProgram = LoadShaders("shaders/skybox.vert", "shaders/skybox.frag");
 	currentShader = normalShaderProgram;
 
 	// Check the shader program.
@@ -67,6 +72,10 @@ bool Window::initializeProgram() {
 		}
 		return false;
 	}
+
+	// Enable face culling to only show "front" of faces.
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	return true;
 }
@@ -119,6 +128,18 @@ bool Window::initializeObjects()
 	spotLightMat = new Materials(spotLightColor, glm::vec3(0.0), glm::vec3(0.0), 1.0);
 	spotLightModel->setMaterials(spotLightMat);
 
+	// Create skybox
+	std::vector<std::string> skyboxTextures
+	{
+		"CubeMapImages/Day_Right.jpg",
+		"CubeMapImages/Day_Left.jpg",
+		"CubeMapImages/Day_Top.jpg",
+		"CubeMapImages/Day_Bottom.jpg",
+		"CubeMapImages/Day_Front.jpg",
+		"CubeMapImages/Day_Back.jpg"
+	};
+	skybox = new Skybox(skyboxTextures, 500.0f);
+
 	return true;
 }
 
@@ -140,9 +161,13 @@ void Window::cleanUp()
 	delete pointLightModel;
     delete pointLightMat;
 
+	// Deallocate skybox.
+	delete skybox;
+
 	// Delete the shader program.
 	glDeleteProgram(normalShaderProgram);
 	glDeleteProgram(realisticShaderProgram);
+	glDeleteProgram(skyboxShaderProgram);
 }
 
 GLFWwindow* Window::createWindow(int width, int height)
@@ -229,6 +254,9 @@ void Window::displayCallback(GLFWwindow* window)
 {	
 	// Clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+
+	// Render skybox
+	skybox->draw(view, projection, skyboxShaderProgram);
 
 	// Render the objects
 	currTriangleFacedModel->draw(view, projection, currentShader);

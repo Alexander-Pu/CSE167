@@ -9,6 +9,7 @@
 #include "TriangleFacedModel.h"
 #include "PointLight.h"
 #include "SpotLight.h"
+#include "Skybox.h"
 
 class Window
 {
@@ -53,6 +54,9 @@ public:
 	static TriangleFacedModel* spotLightModel;
 	static Materials* spotLightMat;
 
+	// Skybox
+	static Skybox* skybox;
+
 	// Camera Matrices
 	static glm::mat4 projection;
 	static glm::mat4 view;
@@ -61,6 +65,7 @@ public:
 	// Shader Program ID
 	static GLuint normalShaderProgram;
 	static GLuint realisticShaderProgram;
+	static GLuint skyboxShaderProgram;
 
 	// Constructors and Destructors
 	static bool initializeProgram();
