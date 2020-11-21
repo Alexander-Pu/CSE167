@@ -32,11 +32,6 @@ TriangleFacedModel::TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vec
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
-	// Generate EBO, bind the EBO to the bound VAO, and send the index data
-	glGenBuffers(2, &EBO[0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::uvec3) * vertexIndexes.size(), vertexIndexes.data(), GL_STATIC_DRAW);
-
 	// Bind VBO to the bound VAO, and store the vertex normal data
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertexNormals.size(), vertexNormals.data(), GL_STATIC_DRAW);
@@ -44,6 +39,12 @@ TriangleFacedModel::TriangleFacedModel(std::vector<glm::vec3> vertexes, std::vec
 	// Enable Vertex Attribute 1 to pass the vertex normal data through to the shader
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
+	// Generate EBO, bind the EBO to the bound VAO, and send the index data
+	glGenBuffers(2, &EBO[0]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::uvec3) * vertexIndexes.size(), vertexIndexes.data(), GL_STATIC_DRAW);
+
 	// Generate EBO, bind the EBO to the bound VAO, and send the vertex normal index data
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::uvec3) * vertexNormalIndexes.size(), vertexNormalIndexes.data(), GL_STATIC_DRAW);

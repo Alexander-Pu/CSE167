@@ -29,6 +29,9 @@ Materials* Window::spotLightMat;
 // Skybox
 Skybox* Window::skybox;
 
+// Disco ball
+Sphere* Window::discoBall;
+
 // Camera Matrices 
 // Projection matrix:
 glm::mat4 Window::projection; 
@@ -43,6 +46,7 @@ glm::mat4 Window::view = glm::lookAt(Window::eyePos, Window::lookAtPoint, Window
 GLuint Window::normalShaderProgram;
 GLuint Window::realisticShaderProgram;
 GLuint Window::skyboxShaderProgram;
+GLuint Window::environmentMapShaderProgram;
 GLuint currentShader;
 
 // Default window state values
@@ -62,6 +66,7 @@ bool Window::initializeProgram() {
 	normalShaderProgram = LoadShaders("shaders/normal.vert", "shaders/normal.frag");
 	realisticShaderProgram = LoadShaders("shaders/realistic.vert", "shaders/realistic.frag");
 	skyboxShaderProgram = LoadShaders("shaders/skybox.vert", "shaders/skybox.frag");
+	environmentMapShaderProgram = LoadShaders("shaders/environment_map.vert", "shaders/environment_map.frag");
 	currentShader = normalShaderProgram;
 
 	// Check the shader program.
@@ -140,6 +145,9 @@ bool Window::initializeObjects()
 	};
 	skybox = new Skybox(skyboxTextures, 500.0f);
 
+	// Create Disco ball
+	discoBall = new Sphere(20, 40);
+
 	return true;
 }
 
@@ -163,6 +171,9 @@ void Window::cleanUp()
 
 	// Deallocate skybox.
 	delete skybox;
+
+	// Deallocate disco ball.
+	delete discoBall;
 
 	// Delete the shader program.
 	glDeleteProgram(normalShaderProgram);
@@ -255,13 +266,16 @@ void Window::displayCallback(GLFWwindow* window)
 	// Clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
-	// Render skybox
-	skybox->draw(view, projection, skyboxShaderProgram);
-
 	// Render the objects
 	currTriangleFacedModel->draw(view, projection, currentShader);
 	pointLightModel->draw(view, projection, currentShader);
 	spotLightModel->draw(view, projection, currentShader);
+
+	// Render discoball
+	discoBall->draw(view, projection, environmentMapShaderProgram);
+
+	// Render skybox last as an optimization
+	skybox->draw(view, projection, skyboxShaderProgram);
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -452,6 +466,8 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 			if (!std::isnan(angle) && glm::length(rotationAxis) != 0) {
 				if (Window::moveModel) {
 					currTriangleFacedModel->rotateObject(angle, rotationAxis);
+					glm::mat4 discoRotation = discoBall->getRotation();
+					discoBall->setRotation(glm::rotate(angle, rotationAxis) * discoRotation);
 				}
 
 				if (Window::movePointLight) {

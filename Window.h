@@ -10,6 +10,7 @@
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "Skybox.h"
+#include "Sphere.h"
 
 class Window
 {
@@ -57,6 +58,9 @@ public:
 	// Skybox
 	static Skybox* skybox;
 
+	// Disco ball
+	static Sphere* discoBall;
+
 	// Camera Matrices
 	static glm::mat4 projection;
 	static glm::mat4 view;
@@ -66,6 +70,7 @@ public:
 	static GLuint normalShaderProgram;
 	static GLuint realisticShaderProgram;
 	static GLuint skyboxShaderProgram;
+	static GLuint environmentMapShaderProgram;
 
 	// Constructors and Destructors
 	static bool initializeProgram();
