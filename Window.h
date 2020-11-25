@@ -3,74 +3,65 @@
 
 #include "main.h"
 #include "shader.h"
-#include "Object.h"
-#include "TriangleFacedModelLoader.h"
-#include "Cube.h"
-#include "TriangleFacedModel.h"
-#include "PointLight.h"
-#include "SpotLight.h"
+#include "Transform.h"
+#include "Geometry.h"
+#include "TriangleGeometry.h"
+#include "DiscoBall.h"
 #include "Skybox.h"
-#include "Sphere.h"
+#include "CubeMapTexture.h"
+#include "Camera.h"
 
 class Window
 {
-private:
-	// Window state values
-	static bool moveModel;
-	static bool movePointLight;
-	static bool moveSpotLight;
-	static bool canMoveModel;
-	static bool canMovePointLight;
-	static bool canMoveSpotLight;
-	static bool pointLightOn;
-	static bool spotLightOn;
-
-	static glm::vec3 lastPoint;
-	static glm::vec3 trackBallMapping(double mouseXPos, double mouseYPos);
 public:
-
 	// Window Properties
 	static int width;
 	static int height;
 	static const char* windowTitle;
+	
+	// Movement constants
+	static const float MOVE_SPEED;
+	static const float ROTATION_SPEED;
+	static const glm::vec3 FORWARD;
+	static const glm::vec3 RIGHT;
+	static const glm::vec3 UP;
 
-	// TriangleFacedModelLoader
-	static TriangleFacedModelLoader* triangleFacedModelLoader;
-
-	// Objects to Render
-	static TriangleFacedModel* bunnyTriangleFacedModel;
-	static TriangleFacedModel* sandalTriangleFacedModel;
-	static TriangleFacedModel* bearTriangleFacedModel;
-
-	// Materials
-	static Materials* shinyMat;
-	static Materials* diffuseMat;
-	static Materials* shinyAndDiffuseMat;
-
-	// Light
-	static PointLight* pointLight;
-	static TriangleFacedModel* pointLightModel;
-	static Materials* pointLightMat;
-	static SpotLight* spotLight;
-	static TriangleFacedModel* spotLightModel;
-	static Materials* spotLightMat;
-
-	// Skybox
-	static Skybox* skybox;
-
-	// Disco ball
-	static Sphere* discoBall;
-
-	// Camera Matrices
-	static glm::mat4 projection;
-	static glm::mat4 view;
-	static glm::vec3 eyePos, lookAtPoint, upVector;
+	static float time;
+	static float deltaTime;
+	static float rotateLeft;
+	static float moveForward;
+	static float strafeRight;
+	static float moveUp;
 
 	// Shader Program ID
 	static GLuint normalShaderProgram;
-	static GLuint realisticShaderProgram;
 	static GLuint skyboxShaderProgram;
 	static GLuint environmentMapShaderProgram;
+	static std::vector<GLuint> shaders;
+
+	// Textures
+	static CubeMapTexture* skyboxTexture;
+
+	// Models to Render
+	static Geometry* bunnyModel;
+	static Geometry* sandalModel;
+	static Geometry* bearModel;
+
+	// Skybox
+	static Transform* skyboxWorld;
+	static Transform* skyboxTransform;
+	static Geometry* skybox;
+
+	// World
+	static Transform* world;
+
+	// Environment Mapped World
+	static Transform* environmentMappedWorld;
+
+	// Camera Matrices
+	static glm::mat4 projection;
+	static Transform* cameraTransform;
+	static Camera* mainCamera;
 
 	// Constructors and Destructors
 	static bool initializeProgram();
@@ -87,9 +78,10 @@ public:
 
 	// Callbacks
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 	static void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos);
+
+private:
+	static void updateProjection(const glm::mat4& projection);
 };
 
 #endif

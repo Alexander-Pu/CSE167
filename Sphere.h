@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <iostream>
+#include "stb_image.h"
 
 using namespace std;
 
@@ -19,9 +20,10 @@ private:
 
 	GLuint VAO;
 	GLuint VBO[2], EBO[2];
+	GLuint TEXTURE;
 
 public:
-	Sphere(int numFacesVertical, int numFacesHorizontal);
+	Sphere(vector<std::string> textureFaceFiles, int numFacesVertical, int numFacesHorizontal);
 	~Sphere();
 
 	void draw(const glm::mat4& view, const glm::mat4& projection, GLuint shader);

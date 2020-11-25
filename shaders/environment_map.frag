@@ -5,11 +5,10 @@ in vec3 worldPosition;
 in vec3 worldNormal;
 
 uniform samplerCube skybox;
-uniform mat4 view;
+uniform vec3 eyePos;
 
 void main()
 {
-    vec3 eyePos = vec3(-view[3][0], -view[3][1], -view[3][2]);
     vec3 eyeVec = normalize(worldPosition - eyePos);
     vec3 reflectVec = reflect(eyeVec, normalize(worldNormal));
 

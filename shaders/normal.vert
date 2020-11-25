@@ -9,6 +9,7 @@ layout (location = 1) in vec3 normal;
 // Uniform variables can be updated by fetching their location and passing values to that location
 uniform mat4 projection;
 uniform mat4 view;
+uniform vec3 eyePos;
 uniform mat4 model;
 uniform mat3 normalModel;
 
@@ -33,5 +34,5 @@ void main()
 				                0.0, 0.5, 0.0, 0.0, 
 				                0.0, 0.0, 0.5, 0.0, 
 				                0.0, 0.0, 0.0, 1.0);
-    color = vec3(scaleHalfMatrix * add2Matrix * vec4(normal, 1.0));
+    color = vec3(scaleHalfMatrix * add2Matrix * vec4(normalize(normalModel * normal), 1.0));
 }

@@ -7,7 +7,7 @@ in vec3 worldPosition;
 in vec3 worldNormal;
 
 // View variables
-uniform mat4 view;
+uniform vec3 eyePos;
 
 // Material attributes
 uniform vec3 ambient;
@@ -38,7 +38,6 @@ out vec4 fragColor;
 void main()
 {
     vec3 normalizedWorldNormal = normalize(worldNormal);
-    vec3 eyePos = vec3(-view[3][0], -view[3][1], -view[3][2]);
     vec3 eyeVector = normalize(eyePos - worldPosition);
     
     // ------------------------------------------------------------------------------------------------------------

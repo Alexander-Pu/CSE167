@@ -5,6 +5,7 @@ out vec3 texture_coords;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform vec3 eyePos;
 uniform mat4 model;
 
 void main()
