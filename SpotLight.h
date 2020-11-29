@@ -14,7 +14,7 @@ private:
 	float cutoff, exponent;
 
 public:
-	SpotLight(glm::vec3 pos, glm::vec3 color, glm::vec3 direction, glm::vec3 atten, float cutoff, float exponent);
+	SpotLight(glm::vec3 pos, glm::vec3 color, glm::vec3 atten, glm::vec3 direction, float cutoff, float exponent);
 	~SpotLight();
 
 	void sendLightToShader(const int shaderID);

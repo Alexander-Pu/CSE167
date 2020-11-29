@@ -6,7 +6,7 @@ int Window::height;
 const char* Window::windowTitle = "CSE 167";
 
 const float Window::MOVE_SPEED = 15;
-const float Window::ROTATION_SPEED = glm::half_pi<float>();
+const float Window::ROTATION_SPEED = glm::pi<float>();
 const glm::vec3 Window::FORWARD = glm::vec3(0, 0, -1);
 const glm::vec3 Window::RIGHT = glm::vec3(1, 0, 0);
 const glm::vec3 Window::UP = glm::vec3(0, 1, 0);
@@ -19,18 +19,23 @@ float Window::strafeRight = 0;
 float Window::moveUp = 0;
 
 // Shader Program ID
-GLuint Window::normalShaderProgram;
-GLuint Window::skyboxShaderProgram;
+GLuint Window::phongShader;
 GLuint Window::environmentMapShaderProgram;
+GLuint Window::skyboxShaderProgram;
 std::vector<GLuint> Window::shaders;
 
 // Textures 
 CubeMapTexture* Window::skyboxTexture;
+Texture* Window::grass;
+
+// Materials
+Materials* Window::shinyAndDiffuseMat;
 
 // Models to Render
-Geometry* Window::bunnyModel;
-Geometry* Window::sandalModel;
-Geometry* Window::bearModel;
+Geometry* Window::plane;
+Geometry* Window::cube;
+Geometry* Window::cone;
+Geometry* Window::cylinder;
 
 // Skybox 
 Transform* Window::skyboxWorld;
@@ -39,6 +44,9 @@ Geometry* Window::skybox;
 
 // World
 Transform* Window::world;
+Transform* Window::basePlate;
+Transform* Window::spinner;
+Transform* Window::chair;
 
 // Environment Mapped World
 Transform* Window::environmentMappedWorld;
@@ -48,13 +56,18 @@ glm::mat4 Window::projection;
 Transform* Window::cameraTransform;
 Camera* Window::mainCamera;
 
+// Lights
+PointLight* Window::pointLight;
+SpotLight* Window::spotLight;
+
 bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
-	normalShaderProgram = LoadShaders("shaders/normal.vert", "shaders/normal.frag");
-	skyboxShaderProgram = LoadShaders("shaders/skybox.vert", "shaders/skybox.frag");
+	phongShader = LoadShaders("shaders/realistic.vert", "shaders/realistic.frag");
+	std::cout << "Phong shader id: " << phongShader;
 	environmentMapShaderProgram = LoadShaders("shaders/environment_map.vert", "shaders/environment_map.frag");
-	shaders.push_back(normalShaderProgram);
+	skyboxShaderProgram = LoadShaders("shaders/skybox.vert", "shaders/skybox.frag");
+	shaders.push_back(phongShader);
 	shaders.push_back(skyboxShaderProgram);
 	shaders.push_back(environmentMapShaderProgram);
 	bool shadersLoaded = true;
@@ -83,7 +96,7 @@ bool Window::initializeProgram() {
 
 bool Window::initializeObjects()
 {
-	// Create skybox texture
+	// Create textures
 	std::vector<std::string> skyboxTextures
 	{
 		"CubeMapImages/Day_Right.jpg",
@@ -97,14 +110,22 @@ bool Window::initializeObjects()
 	skyboxTexture->sendTextureToShader(Window::skyboxShaderProgram);
 	skyboxTexture->sendTextureToShader(Window::environmentMapShaderProgram);
 
+	grass = new Texture("Textures/grass.jpg");
+	//grass->sendTextureToShader(phongShader);
+
+	// Materials
+	shinyAndDiffuseMat = new Materials(glm::vec3(1, 0.5, 0.5), glm::vec3(0.9), glm::vec3(0.9), 64.0);
+	shinyAndDiffuseMat->sendMatToShader(phongShader);
+
 	// Create 3d models of objects.
-	bunnyModel = new TriangleGeometry("Objects/bunny.objmodel");
-	sandalModel = new TriangleGeometry("Objects/sandal.objmodel");
-	bearModel = new TriangleGeometry("Objects/bear.objmodel");
+	plane = new TriangleGeometry("Objects/plane.objmodel");
+	cube = new TriangleGeometry("Objects/cube.objmodel");
+	cone = new TriangleGeometry("Objects/cone.objmodel");
+	cylinder = new TriangleGeometry("Objects/cylinder.objmodel");
 
 	// Initialize skybox
 	skyboxWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
-	skyboxTransform = new Transform(glm::scale(glm::vec3(500)), glm::mat4(1), glm::vec3(0, 0, 0));
+	skyboxTransform = new Transform(glm::scale(glm::vec3(50)), glm::mat4(1), glm::vec3(0, 0, 0));
 	skyboxWorld->addChild(skyboxTransform);
 	skybox = new Skybox();
 	skyboxTransform->addChild(skybox);
@@ -112,17 +133,46 @@ bool Window::initializeObjects()
 	//Place objects in world
 	world = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
 
-	Transform* bunnyTransform = new Transform(glm::scale(glm::vec3(6)), glm::mat4(1), glm::vec3(0, 0, 0));
-	bunnyTransform->addChild(bunnyModel);
-	world->addChild(bunnyTransform);
+	Transform* groundTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(0, 0, 0));
+	groundTransform->addChild(plane);
+	world->addChild(groundTransform);
 
-	Transform* sandalTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(0, 0, 5));
-	sandalTransform->addChild(sandalModel);
-	bunnyTransform->addChild(sandalTransform);
+	// Ride
+	// Base Plate
+	basePlate = new Transform(glm::scale(glm::vec3(1)), glm::rotate(glm::pi<float>(), Window::UP), glm::vec3(0, 0, 0));
+	world->addChild(basePlate);
+	Transform* basePlateCylinder = new Transform(glm::scale(glm::vec3(5, 1, 5)), glm::mat4(1), glm::vec3(0, 0, 0));
+	basePlateCylinder->addChild(cylinder);
+	basePlate->addChild(basePlateCylinder);
+	Transform* basePlateCube = new Transform(glm::scale(glm::vec3(10, 1, 10)), glm::mat4(1), glm::vec3(0, 2, 0));
+	basePlateCube->addChild(cube);
+	basePlate->addChild(basePlateCube);
+	Transform* basePlatePillar = new Transform(glm::scale(glm::vec3(1, 20, 1)), glm::mat4(1), glm::vec3(0, 10, -5));
+	basePlatePillar->addChild(cube);
+	basePlate->addChild(basePlatePillar);
+	Transform* basePlateArm = new Transform(glm::scale(glm::vec3(1, 1, 5)), glm::mat4(1), glm::vec3(0, 20, -3));
+	basePlateArm->addChild(cube);
+	basePlate->addChild(basePlateArm);
 
-	Transform* bearTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(0, 5, 0));
-	bearTransform->addChild(bearModel);
-	sandalTransform->addChild(bearTransform);
+	// Spinner
+	spinner = new Transform(glm::scale(glm::vec3(1)), glm::rotate(glm::half_pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(0, 20, 0));
+	basePlate->addChild(spinner);
+	Transform* spinnerTube = new Transform(glm::scale(glm::vec3(15, 1, 1)), glm::mat4(1), glm::vec3(0, 0, 0));
+	spinnerTube->addChild(cube);
+	spinner->addChild(spinnerTube);
+	Transform* pivot = new Transform(glm::scale(glm::vec3(.15)), glm::mat4(1), glm::vec3(0, .5, 0));
+	pivot->addChild(cone);
+	spinner->addChild(pivot);
+	Transform* counterWeight = new Transform(glm::scale(glm::vec3(2)), glm::mat4(1), glm::vec3(-8, 0, 0));
+	counterWeight->addChild(cube);
+	spinner->addChild(counterWeight);
+
+	// Chair
+	chair = new Transform(glm::scale(glm::vec3(1)), glm::rotate(-glm::half_pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(8, 1.5, 0));
+	spinner->addChild(chair);
+	Transform* chairSeat = new Transform(glm::scale(glm::vec3(8, 3, 2)), glm::mat4(1), glm::vec3(0, 0, 0));
+	chairSeat->addChild(cube);
+	chair->addChild(chairSeat);
 
 	// Create Environment Mapped world
 	environmentMappedWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
@@ -133,12 +183,26 @@ bool Window::initializeObjects()
 	environmentMappedWorld->addChild(discoBallTransform);
 
 	// Initialize camera
-	cameraTransform = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, 0, 0));
-	world->addChild(cameraTransform);
+	cameraTransform = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, 0, 20));
+	chair->addChild(cameraTransform);
 	environmentMappedWorld->addChild(cameraTransform);
 	skyboxWorld->addChild(cameraTransform);
 	mainCamera = new Camera();
 	cameraTransform->addChild(mainCamera);
+
+	// Initialize lights
+	Transform* pointLightTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(3.0, 10, 6.0));
+	pointLightTransform->addChild(cube);
+	world->addChild(pointLightTransform);
+
+	Transform* spotLightTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(-3.0, 10, 6.0));
+	spotLightTransform->addChild(cube);
+	world->addChild(spotLightTransform);
+
+	pointLight = new PointLight(glm::vec3(3.0, 10.0, 6.0), glm::vec3(0.6, 0.6, 0.8), glm::vec3(1, 0, 0.0));
+	pointLight->sendLightToShader(phongShader);
+	spotLight = new SpotLight(glm::vec3(-3.0, 10.0, 6.0), glm::vec3(0.8, 0.6, 0.6), glm::vec3(1, 0, 0.0), glm::normalize(glm::vec3(0,0,0) - glm::vec3(-3.0, 3.0, 6.0)), 0.5, 20);
+	spotLight->sendLightToShader(phongShader);
 
 	return true;
 }
@@ -147,11 +211,12 @@ void Window::cleanUp()
 {
 	// Delete textures
 	delete skyboxTexture;
+	delete grass;
 
 	// Deallocate the objects.
-	delete bunnyModel;
-	delete sandalModel;
-	delete bearModel;
+	delete cube;
+	delete cone;
+	delete cylinder;
 
 	// Deallocate skybox.
 	delete skyboxTransform;
@@ -162,7 +227,7 @@ void Window::cleanUp()
 	delete environmentMappedWorld;
 
 	// Delete the shader program.
-	glDeleteProgram(normalShaderProgram);
+	glDeleteProgram(phongShader);
 	glDeleteProgram(skyboxShaderProgram);
 	glDeleteProgram(environmentMapShaderProgram);
 }
@@ -253,15 +318,15 @@ void Window::displayCallback(GLFWwindow* window)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
 	// Render the world
-	world->draw(normalShaderProgram, glm::mat4(1));
+	world->draw(phongShader, glm::mat4(1));
 
 	// Render environment mapped world
 	skyboxTexture->sendTextureToShader(Window::environmentMapShaderProgram);
-	environmentMappedWorld->draw(environmentMapShaderProgram, glm::mat4(1));
+	//environmentMappedWorld->draw(environmentMapShaderProgram, glm::mat4(1));
 
 	// Render skybox last as an optimization
 	skyboxTexture->sendTextureToShader(Window::skyboxShaderProgram);
-	skyboxWorld->draw(skyboxShaderProgram, glm::mat4(1));
+	//skyboxWorld->draw(skyboxShaderProgram, glm::mat4(1));
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -272,10 +337,16 @@ void Window::displayCallback(GLFWwindow* window)
 	glm::mat4 translateMatrix = glm::mat4(1);
 	if (moveForward != 0 || strafeRight != 0 || moveUp != 0) {
 		glm::vec3 moveDir = glm::normalize(moveForward * Window::FORWARD + strafeRight * Window::RIGHT + moveUp * Window::UP);
-		translateMatrix = glm::translate(glm::mat4(1), Window::deltaTime * moveDir);
+		translateMatrix = glm::translate(glm::mat4(1), Window::deltaTime * MOVE_SPEED * moveDir);
 	}
 
 	cameraTransform->applyTransformation(translateMatrix * rotationMatrix);
+
+	// Rotate baseplate
+	rotationMatrix = glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, Window::UP);
+	basePlate->applyTransformation(rotationMatrix);
+	spinner->applyTransformation(rotationMatrix);
+	chair->applyTransformation(glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, glm::vec3(0, 0, -1)));
 
 	// Swap buffers.
 	glfwSwapBuffers(window);

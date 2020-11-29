@@ -9,7 +9,11 @@
 #include "DiscoBall.h"
 #include "Skybox.h"
 #include "CubeMapTexture.h"
+#include "Texture.h"
+#include "Materials.h"
 #include "Camera.h"
+#include "PointLight.h"
+#include "SpotLight.h"
 
 class Window
 {
@@ -34,18 +38,23 @@ public:
 	static float moveUp;
 
 	// Shader Program ID
-	static GLuint normalShaderProgram;
-	static GLuint skyboxShaderProgram;
+	static GLuint phongShader;
 	static GLuint environmentMapShaderProgram;
+	static GLuint skyboxShaderProgram;
 	static std::vector<GLuint> shaders;
 
 	// Textures
 	static CubeMapTexture* skyboxTexture;
+	static Texture* grass;
+
+	// Materials
+	static Materials* shinyAndDiffuseMat;
 
 	// Models to Render
-	static Geometry* bunnyModel;
-	static Geometry* sandalModel;
-	static Geometry* bearModel;
+	static Geometry* plane;
+	static Geometry* cube;
+	static Geometry* cone;
+	static Geometry* cylinder;
 
 	// Skybox
 	static Transform* skyboxWorld;
@@ -54,6 +63,9 @@ public:
 
 	// World
 	static Transform* world;
+	static Transform* basePlate;
+	static Transform* spinner;
+	static Transform* chair;
 
 	// Environment Mapped World
 	static Transform* environmentMappedWorld;
@@ -62,6 +74,10 @@ public:
 	static glm::mat4 projection;
 	static Transform* cameraTransform;
 	static Camera* mainCamera;
+
+	// Lights
+	static PointLight* pointLight;
+	static SpotLight* spotLight;
 
 	// Constructors and Destructors
 	static bool initializeProgram();

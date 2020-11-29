@@ -5,16 +5,12 @@ TriangleGeometry::TriangleGeometry(const std::string objFileName)
 	// ------------------------- LOAD GEOMETRY FROM FILE -------------------------
 	std::ifstream objFile(objFileName);
 	std::vector<glm::vec3> vertexes;
+	std::vector<glm::vec2> textureCoordinates;
 	std::vector<glm::vec3> vertexNormals;
-	std::vector<glm::uvec3> vertexIndexes;
-	std::vector<glm::uvec3> vertexNormalIndexes;
 
-	GLfloat minX = 0.0;
-	GLfloat maxX = 0.0;
-	GLfloat minY = 0.0;
-	GLfloat maxY = 0.0;
-	GLfloat minZ = 0.0;
-	GLfloat maxZ = 0.0;
+	std::vector<int> vertexIndices;
+	std::vector<int> textureCoordinateIndices;
+	std::vector<int> vertexNormalIndices;
 
 	if (objFile.is_open())
 	{
@@ -33,18 +29,13 @@ TriangleGeometry::TriangleGeometry(const std::string objFileName)
 				glm::vec3 point;
 				ss >> point.x >> point.y >> point.z;
 
-				// Calculate min/max values
-				// X
-				minX = glm::min(point.x, minX);
-				maxX = glm::max(point.x, maxX);
-				// Y
-				minY = glm::min(point.y, minY);
-				maxY = glm::max(point.y, maxY);
-				// Z
-				minZ = glm::min(point.z, minZ);
-				maxZ = glm::max(point.z, maxZ);
-
 				vertexes.push_back(point);
+			}
+			else if (label == "vt") {
+				glm::vec2 textureCoordinate;
+				ss >> textureCoordinate.x >> textureCoordinate.y;
+
+				textureCoordinates.push_back(textureCoordinate);
 			}
 			else if (label == "vn") {
 				glm::vec3 vertexNormal;
@@ -54,31 +45,13 @@ TriangleGeometry::TriangleGeometry(const std::string objFileName)
 				vertexNormals.push_back(glm::normalize(vertexNormal));
 			}
 			else if (label == "f") {
-				std::string pair;
+				std::string faceVertex;
 
-				glm::vec3 vertexIndexTriple;
-				glm::vec3 vertexNormalIndexTriple;
-
-				// First index pair
-				ss >> pair;
-				int delimiterIdx = pair.find(PAIR_DELIMITER);
-				vertexIndexTriple.x = std::stoi(pair.substr(0, delimiterIdx)) - 1;
-				vertexNormalIndexTriple.x = std::stoi(pair.substr(delimiterIdx + PAIR_DELIMITER.length())) - 1;
-
-				// Second index pair
-				ss >> pair;
-				delimiterIdx = pair.find(PAIR_DELIMITER);
-				vertexIndexTriple.y = std::stoi(pair.substr(0, delimiterIdx)) - 1;
-				vertexNormalIndexTriple.y = std::stoi(pair.substr(delimiterIdx + PAIR_DELIMITER.length())) - 1;
-
-				// Third index pair
-				ss >> pair;
-				delimiterIdx = pair.find(PAIR_DELIMITER);
-				vertexIndexTriple.z = std::stoi(pair.substr(0, delimiterIdx)) - 1;
-				vertexNormalIndexTriple.z = std::stoi(pair.substr(delimiterIdx + PAIR_DELIMITER.length())) - 1;
-
-				vertexIndexes.push_back(vertexIndexTriple);
-				vertexNormalIndexes.push_back(vertexNormalIndexTriple);
+				// Iterate over the 3 groups of indices in the face line
+				for (int i = 0; i < 3; i++) {
+					ss >> faceVertex;
+					pushFaceIndices(faceVertex, vertexIndices, textureCoordinateIndices, vertexNormalIndices);
+				}
 			}
 		}
 	}
@@ -89,72 +62,61 @@ TriangleGeometry::TriangleGeometry(const std::string objFileName)
 
 	objFile.close();
 
-	// Determine midpoint
-	GLfloat midX = (minX + maxX) / 2;
-	GLfloat midY = (minY + maxY) / 2;
-	GLfloat midZ = (minZ + maxZ) / 2;
+	// Process the data based on the indices collected
+	std::vector<glm::vec3> realVertexes;
+	std::vector<glm::vec2> realTextureCoordinates;
+	std::vector<glm::vec3> realVertexNormals;
 
-	glm::vec3 center = glm::vec3(midX, midY, midZ);
-
-	for (int i = 0; i < vertexes.size(); i++) {
-		vertexes[i] = vertexes[i] - center;
+	for (int i = 0; i < vertexIndices.size(); i++) {
+		realVertexes.push_back(vertexes[vertexIndices[i]]);
+	}	
+	for (int i = 0; i < vertexIndices.size(); i++) {
+		realTextureCoordinates.push_back(textureCoordinates[textureCoordinateIndices[i]]);
+	}
+	for (int i = 0; i < vertexIndices.size(); i++) {
+		realVertexNormals.push_back(vertexNormals[vertexNormalIndices[i]]);
 	}
 
-	// Bind the model to a 1x1x1 box
-	GLfloat boundingDimension = 1.0;
-
-	// Determine which axis is the bounding factor
-	GLfloat widthX = glm::abs(maxX - midX);
-	GLfloat widthY = glm::abs(maxY - midY);
-	GLfloat widthZ = glm::abs(maxZ - midZ);
-
-	GLfloat scalingFactorX = boundingDimension / widthX;
-	GLfloat scalingFactorY = boundingDimension / widthY;
-	GLfloat scalingFactorZ = boundingDimension / widthZ;
-
-	GLfloat minScalingFactor = glm::min(glm::min(scalingFactorX, scalingFactorY), scalingFactorZ);
-
-	// Scale all values
-	for (int i = 0; i < vertexes.size(); i++) {
-		vertexes[i] = vertexes[i] * minScalingFactor;
-	}
-
-	numIndices = 3 * vertexIndexes.size();
+	numVertices = realVertexes.size();
 
 	// ------------------------- FINISHED LOADING -------------------------
 
-
 	// Generate a vertex array (VAO) and vertex buffer object (VBO).
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(2, &VBO[0]);
+	glGenBuffers(3, &VBO[0]);
 
 	// Bind to the VAO.
 	glBindVertexArray(VAO);
 
+	// VERTEX
+
 	// Bind VBO to the bound VAO, and store the vertex data
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)* vertexes.size(), vertexes.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)* realVertexes.size(), realVertexes.data(), GL_STATIC_DRAW);
 
 	// Enable Vertex Attribute 0 to pass the vertex data through to the shader
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
+
+	// TEXTURE
+
+	// Bind VBO to the bound VAO, and store the texture coordinate data
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)* realTextureCoordinates.size(), realTextureCoordinates.data(), GL_STATIC_DRAW);
+
+	// Enable Vertex Attribute 1 to pass the texture coordinate data through to the shader
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0);
+
+	// NORMAL
 
 	// Bind VBO to the bound VAO, and store the vertex normal data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)* vertexNormals.size(), vertexNormals.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * realVertexNormals.size(), realVertexNormals.data(), GL_STATIC_DRAW);
 
-	// Enable Vertex Attribute 1 to pass the vertex normal data through to the shader
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-
-	// Generate EBO, bind the EBO to the bound VAO, and send the index data
-	glGenBuffers(2, &EBO[0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::uvec3)* vertexIndexes.size(), vertexIndexes.data(), GL_STATIC_DRAW);
-
-	// Generate EBO, bind the EBO to the bound VAO, and send the vertex normal index data
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::uvec3)* vertexNormalIndexes.size(), vertexNormalIndexes.data(), GL_STATIC_DRAW);
+	// Enable Vertex Attribute 2 to pass the vertex normal data through to the shader
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
 
 	// Unbind the VBO/VAO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -164,8 +126,7 @@ TriangleGeometry::TriangleGeometry(const std::string objFileName)
 TriangleGeometry::~TriangleGeometry()
 {
 	// Delete the VBO and the VAO.
-	glDeleteBuffers(2, &VBO[0]);
-	glDeleteBuffers(2, &EBO[0]);
+	glDeleteBuffers(3, &VBO[0]);
 	glDeleteVertexArrays(1, &VAO);
 }
 
@@ -182,8 +143,8 @@ void TriangleGeometry::draw(GLuint shader, const glm::mat4& C)
 	// Bind the VAO
 	glBindVertexArray(VAO);
 
-	// Draw the points using triangles, indexed with the EBO
-	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+	// Draw the points using triangles
+	glDrawArrays(GL_TRIANGLES, 0, numVertices);
 
 	// Unbind the VAO and shader program
 	glBindVertexArray(0);
@@ -192,4 +153,19 @@ void TriangleGeometry::draw(GLuint shader, const glm::mat4& C)
 
 void TriangleGeometry::update()
 {
+}
+
+void TriangleGeometry::pushFaceIndices(std::string faceVertex, std::vector<int>& vertexIndices, std::vector<int>& textureCoordinateIndices, std::vector<int>& vertexNormalIndices) {
+	// Vertex index
+	int delimiterIdx = faceVertex.find("/");
+	vertexIndices.push_back(std::stoi(faceVertex.substr(0, delimiterIdx)) - 1);
+	faceVertex = faceVertex.substr(delimiterIdx + 1);
+
+	// Texture index
+	delimiterIdx = faceVertex.find("/");
+	textureCoordinateIndices.push_back(std::stoi(faceVertex.substr(0, delimiterIdx)) - 1);
+	faceVertex = faceVertex.substr(delimiterIdx + 1);
+
+	// Normal index
+	vertexNormalIndices.push_back(std::stoi(faceVertex) - 1);
 }

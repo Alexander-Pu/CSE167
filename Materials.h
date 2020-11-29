@@ -3,6 +3,15 @@
 
 #include "Object.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include "glm/gtx/string_cast.hpp"
+#include <glm/gtc/type_ptr.hpp>
+
+#include <iostream>
+#include <string>
+#include <vector>
+
 class Materials
 {
 private:
@@ -13,7 +22,7 @@ public:
 	Materials(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess);
 	~Materials();
 
-	void sendMatToShader(const int shaderID);
+	void sendMatToShader(GLuint shaderID);
 };
 
 #endif

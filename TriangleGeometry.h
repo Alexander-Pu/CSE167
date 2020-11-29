@@ -10,7 +10,7 @@
 class TriangleGeometry : public Geometry
 {
 private:
-	const std::string PAIR_DELIMITER = "//";
+	void pushFaceIndices(std::string faceVertex, std::vector<int>& vertexIndices, std::vector<int>& textureCoordinateIndices, std::vector<int>& vertexNormalIndices);
 
 public:
 	TriangleGeometry(const std::string objFileName);

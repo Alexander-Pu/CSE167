@@ -8,9 +8,10 @@ class Geometry : public Node
 {
 protected:
 	int numIndices;
+	int numVertices;
 
 	GLuint VAO;
-	GLuint VBO[2], EBO[2];
+	GLuint VBO[3], EBO[2];
 
 public:
 	virtual void draw(GLuint shader, const glm::mat4& C) = 0;
