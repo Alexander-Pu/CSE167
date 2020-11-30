@@ -20,7 +20,7 @@ class Texture
 private:
 	GLuint TEXTURE;
 public:
-	Texture(std::string fileName);
+	Texture(std::string fileName, int repeat);
 	~Texture();
 
 	void sendTextureToShader(GLuint shader);

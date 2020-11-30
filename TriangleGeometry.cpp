@@ -1,7 +1,9 @@
 #include "TriangleGeometry.h"
 
-TriangleGeometry::TriangleGeometry(const std::string objFileName)
+TriangleGeometry::TriangleGeometry(const std::string objFileName, Texture* newTexture)
 {
+	texture = newTexture;
+
 	// ------------------------- LOAD GEOMETRY FROM FILE -------------------------
 	std::ifstream objFile(objFileName);
 	std::vector<glm::vec3> vertexes;
@@ -132,6 +134,10 @@ TriangleGeometry::~TriangleGeometry()
 
 void TriangleGeometry::draw(GLuint shader, const glm::mat4& C)
 {
+	if (texture) {
+		texture->sendTextureToShader(shader);
+	}
+
 	glUseProgram(shader);
 
 	glm::highp_mat3 normalMatrix = glm::highp_mat3(glm::transpose(glm::inverse(C)));

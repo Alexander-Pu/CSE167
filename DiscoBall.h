@@ -16,7 +16,6 @@ public:
 
 	void draw(GLuint shader, const glm::mat4& C);
 	void update();
-	void setTexture(CubeMapTexture* newTexture);
 };
 
 #endif

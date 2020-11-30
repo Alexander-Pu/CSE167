@@ -14,30 +14,22 @@ SpotLight::~SpotLight()
 {
 }
 
-// Assumes this is being called in a method that is NOT already calling glUseProgram()
-void SpotLight::sendLightToShader(const int shaderID) {
+void SpotLight::draw(GLuint shader, const glm::mat4& C)
+{
 	// Activate the shader program 
-	glUseProgram(shaderID);
+	glUseProgram(shader);
 
 	// Get the shader variable locations and send the uniform data to the shader 
-	glUniform3fv(glGetUniformLocation(shaderID, "sl_pos"), 1, glm::value_ptr(pos));
-	glUniform3fv(glGetUniformLocation(shaderID, "sl_col"), 1, glm::value_ptr(color));
-	glUniform3fv(glGetUniformLocation(shaderID, "sl_atten"), 1, glm::value_ptr(atten));
-	glUniform3fv(glGetUniformLocation(shaderID, "sl_dir"), 1, glm::value_ptr(direction));
-	glUniform1f(glGetUniformLocation(shaderID, "sl_cutoff"), cutoff);
-	glUniform1f(glGetUniformLocation(shaderID, "sl_exp"), exponent);
+	glUniform3fv(glGetUniformLocation(shader, "sl_pos"), 1, glm::value_ptr(pos));
+	glUniform3fv(glGetUniformLocation(shader, "sl_col"), 1, glm::value_ptr(color));
+	glUniform3fv(glGetUniformLocation(shader, "sl_atten"), 1, glm::value_ptr(atten));
+	glUniform3fv(glGetUniformLocation(shader, "sl_dir"), 1, glm::value_ptr(direction));
+	glUniform1f(glGetUniformLocation(shader, "sl_cutoff"), cutoff);
+	glUniform1f(glGetUniformLocation(shader, "sl_exp"), exponent);
 
 	glUseProgram(0);
 }
 
-void SpotLight::setPos(glm::vec3 newPos) {
-	pos = newPos;
-}
-
-void SpotLight::setDirection(glm::vec3 newDirection) {
-	direction = newDirection;
-}
-
-void SpotLight::setColor(glm::vec3 newColor) {
-	color = newColor;
+void SpotLight::update()
+{
 }

@@ -121,12 +121,8 @@ DiscoBall::DiscoBall(int numFacesVertical, int numFacesHorizontal)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
 	// Generate EBO, bind the EBO to the bound VAO, and send the index data
-	glGenBuffers(2, &EBO[0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_STATIC_DRAW);
-
-	// Generate EBO, bind the EBO to the bound VAO, and send the vertex normal index data
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_STATIC_DRAW);
 
 	// Unbind the VBO/VAO
@@ -138,7 +134,7 @@ DiscoBall::~DiscoBall()
 {
 	// Delete the VBO/EBO and the VAO.
 	glDeleteBuffers(2, &VBO[0]);
-	glDeleteBuffers(2, &EBO[0]);
+	glDeleteBuffers(1, &EBO);
 	glDeleteVertexArrays(1, &VAO);
 }
 
@@ -165,5 +161,4 @@ void DiscoBall::draw(GLuint shader, const glm::mat4& C)
 
 void DiscoBall::update()
 {
-	//model = glm::rotate(.01f, glm::vec3(0, 0, 1)) * model;
 }

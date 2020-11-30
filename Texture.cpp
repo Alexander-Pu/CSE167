@@ -1,16 +1,18 @@
 #include "Texture.h"
 
-Texture::Texture(std::string fileName)
+Texture::Texture(std::string fileName, int repeat)
 {
 	// Bind texture id
 	glGenTextures(1, &TEXTURE);
 	glBindTexture(GL_TEXTURE_2D, TEXTURE); // Tell OpenGL which texture to edit
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // set bi-linear interpolation
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // for both filtering modes
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture edge mode
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat); // set texture edge mode
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat);
 
-	// Load separate texture faces
+	stbi_set_flip_vertically_on_load(true);
+
+	// Load texture
 	int width, height, numChannels;
 	unsigned char* textureData = stbi_load(fileName.c_str(), &width, &height, &numChannels, 0);
 	if (textureData) {

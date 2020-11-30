@@ -4,6 +4,7 @@
 #include "Node.h"
 
 #include <vector>
+#include <map>
 
 class Transform : public Node
 {

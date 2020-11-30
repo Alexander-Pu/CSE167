@@ -67,8 +67,8 @@ Skybox::Skybox()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
 	// Generate EBO, bind the EBO to the bound VAO, and send the index data
-	glGenBuffers(1, &EBO[0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(glm::ivec3) * indices.size(), indices.data(), GL_STATIC_DRAW);
 
 	// Unbind the VBO/VAO
@@ -80,7 +80,7 @@ Skybox::~Skybox()
 {
 	// Delete the VBO and the VAO.
 	glDeleteBuffers(1, &VBO[0]);
-	glDeleteBuffers(1, &EBO[0]);
+	glDeleteBuffers(1, &EBO);
 	glDeleteVertexArrays(1, &VAO);
 }
 

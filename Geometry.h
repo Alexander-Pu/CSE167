@@ -2,16 +2,17 @@
 #define _GEOMETRY_H_
 
 #include "Node.h"
-#include "CubeMapTexture.h"
+#include "Texture.h"
 
 class Geometry : public Node
 {
 protected:
 	int numIndices;
 	int numVertices;
+	Texture* texture;
 
 	GLuint VAO;
-	GLuint VBO[3], EBO[2];
+	GLuint VBO[3], EBO;
 
 public:
 	virtual void draw(GLuint shader, const glm::mat4& C) = 0;

@@ -5,8 +5,10 @@
 
 class Camera : public Node
 {
+private:
+	std::vector<GLuint> shaders;
 public:
-	Camera();
+	Camera(std::vector<GLuint> shaders);
 	~Camera();
 
 	void draw(GLuint shader, const glm::mat4& C);

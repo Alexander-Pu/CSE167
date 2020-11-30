@@ -1,6 +1,7 @@
 #include "Camera.h"
 
-Camera::Camera()
+Camera::Camera(std::vector<GLuint> shaders)
+	:shaders(shaders)
 {
 }
 
@@ -16,10 +17,12 @@ void Camera::draw(GLuint shader, const glm::mat4& C)
 	
 	glm::mat4 view = glm::lookAt(eyePos, eyePos + lookAt, upVector);
 
-	glUseProgram(shader);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
-	glUniform3fv(glGetUniformLocation(shader, "eyePos"), 1, glm::value_ptr(eyePos));
-	glUseProgram(0);
+	for (GLuint shader : shaders) {
+		glUseProgram(shader);
+		glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, false, glm::value_ptr(view));
+		glUniform3fv(glGetUniformLocation(shader, "eyePos"), 1, glm::value_ptr(eyePos));
+		glUseProgram(0);
+	}
 }
 
 void Camera::update()

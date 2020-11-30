@@ -6,6 +6,7 @@
 #include "Transform.h"
 #include "Geometry.h"
 #include "TriangleGeometry.h"
+#include "QuadGeometry.h"
 #include "DiscoBall.h"
 #include "Skybox.h"
 #include "CubeMapTexture.h"
@@ -47,6 +48,7 @@ public:
 	static CubeMapTexture* skyboxTexture;
 	static Texture* white;
 	static Texture* grass;
+	static Texture* clock;
 
 	// Materials
 	static Materials* diffuseMat;
@@ -57,6 +59,7 @@ public:
 	static Geometry* cube;
 	static Geometry* cone;
 	static Geometry* cylinder;
+	static Geometry* clockModel;
 
 	// Skybox
 	static Transform* skyboxWorld;

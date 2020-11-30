@@ -13,7 +13,7 @@ private:
 	void pushFaceIndices(std::string faceVertex, std::vector<int>& vertexIndices, std::vector<int>& textureCoordinateIndices, std::vector<int>& vertexNormalIndices);
 
 public:
-	TriangleGeometry(const std::string objFileName);
+	TriangleGeometry(const std::string objFileName, Texture* newTexture);
 	~TriangleGeometry();
 
 	void draw(GLuint shader, const glm::mat4& C);
