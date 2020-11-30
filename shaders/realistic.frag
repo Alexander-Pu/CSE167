@@ -16,6 +16,9 @@ uniform vec3 diffuse;
 uniform vec3 specular;
 uniform float shininess;
 
+// Texture
+uniform sampler2D tex;
+
 // Point light attributes
 uniform vec3 pl_pos;
 uniform vec3 pl_col;
@@ -90,5 +93,5 @@ void main()
     // ------------------------------------------------------------------------------------------------------------
     vec3 totalColor = (pl_total + sl_total + ambient);
 
-    fragColor = vec4(totalColor, 1.0f);
+    fragColor = vec4(texture(tex, fragTexCoordinates).rgb * totalColor, 1.0f);
 }

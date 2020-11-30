@@ -45,9 +45,11 @@ public:
 
 	// Textures
 	static CubeMapTexture* skyboxTexture;
+	static Texture* white;
 	static Texture* grass;
 
 	// Materials
+	static Materials* diffuseMat;
 	static Materials* shinyAndDiffuseMat;
 
 	// Models to Render
@@ -61,14 +63,29 @@ public:
 	static Transform* skyboxTransform;
 	static Geometry* skybox;
 
+	// Grass
+	static Transform* grassWorld;
+
 	// World
 	static Transform* world;
 	static Transform* basePlate;
 	static Transform* spinner;
 	static Transform* chair;
+	static Transform* chairSeat;
+
+	static float chairRotationAngle;
+	static float chairRotationDirection;
+	static float chairRotationAngleMin;
+	static float chairRotationAngleMax;
+
+	// Animations
+	static bool rotateSpinner;
+	static float rotateChair;
+	static bool rotateChairSeat;
 
 	// Environment Mapped World
 	static Transform* environmentMappedWorld;
+	static Transform* discoBallTransform;
 
 	// Camera Matrices
 	static glm::mat4 projection;

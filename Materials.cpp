@@ -22,7 +22,5 @@ void Materials::sendMatToShader(GLuint shaderID) {
 	glUniform3fv(glGetUniformLocation(shaderID, "specular"), 1, glm::value_ptr(specular));
 	glUniform1f(glGetUniformLocation(shaderID, "shininess"), shininess);
 
-	std::cout << "Sending materials" << shaderID << ", " << glm::to_string(ambient) << ", " << glm::to_string(diffuse) << ", " << glm::to_string(specular) << ", " << shininess << std::endl;
-
 	glUseProgram(0);
 }

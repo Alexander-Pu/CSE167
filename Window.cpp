@@ -26,9 +26,11 @@ std::vector<GLuint> Window::shaders;
 
 // Textures 
 CubeMapTexture* Window::skyboxTexture;
+Texture* Window::white;
 Texture* Window::grass;
 
 // Materials
+Materials* Window::diffuseMat;
 Materials* Window::shinyAndDiffuseMat;
 
 // Models to Render
@@ -42,14 +44,28 @@ Transform* Window::skyboxWorld;
 Transform* Window::skyboxTransform;
 Geometry* Window::skybox;
 
+// Grass world
+Transform* Window::grassWorld;
+
 // World
 Transform* Window::world;
 Transform* Window::basePlate;
 Transform* Window::spinner;
 Transform* Window::chair;
+Transform* Window::chairSeat;
+
+float Window::chairRotationAngle = 0;
+float Window::chairRotationDirection = 1;
+float Window::chairRotationAngleMin = -.75*glm::quarter_pi<float>();
+float Window::chairRotationAngleMax = .75 * glm::quarter_pi<float>();
+
+bool Window::rotateSpinner = false;
+float Window::rotateChair = 0;
+bool Window::rotateChairSeat = false;
 
 // Environment Mapped World
 Transform* Window::environmentMappedWorld;
+Transform* Window::discoBallTransform;
 
 // Camera Matrices 
 glm::mat4 Window::projection; 
@@ -64,7 +80,6 @@ bool Window::initializeProgram() {
 
 	// Create a shader program with a vertex shader and a fragment shader.
 	phongShader = LoadShaders("shaders/realistic.vert", "shaders/realistic.frag");
-	std::cout << "Phong shader id: " << phongShader;
 	environmentMapShaderProgram = LoadShaders("shaders/environment_map.vert", "shaders/environment_map.frag");
 	skyboxShaderProgram = LoadShaders("shaders/skybox.vert", "shaders/skybox.frag");
 	shaders.push_back(phongShader);
@@ -110,12 +125,12 @@ bool Window::initializeObjects()
 	skyboxTexture->sendTextureToShader(Window::skyboxShaderProgram);
 	skyboxTexture->sendTextureToShader(Window::environmentMapShaderProgram);
 
-	grass = new Texture("Textures/grass.jpg");
-	//grass->sendTextureToShader(phongShader);
+	white = new Texture("Textures/white.jpg");
+	grass = new Texture("Textures/grass.png");
 
 	// Materials
-	shinyAndDiffuseMat = new Materials(glm::vec3(1, 0.5, 0.5), glm::vec3(0.9), glm::vec3(0.9), 64.0);
-	shinyAndDiffuseMat->sendMatToShader(phongShader);
+	diffuseMat = new Materials(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.9), glm::vec3(0), 64.0);
+	shinyAndDiffuseMat = new Materials(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.9), glm::vec3(0.9), 64.0);
 
 	// Create 3d models of objects.
 	plane = new TriangleGeometry("Objects/plane.objmodel");
@@ -125,17 +140,19 @@ bool Window::initializeObjects()
 
 	// Initialize skybox
 	skyboxWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
-	skyboxTransform = new Transform(glm::scale(glm::vec3(50)), glm::mat4(1), glm::vec3(0, 0, 0));
+	skyboxTransform = new Transform(glm::scale(glm::vec3(500)), glm::mat4(1), glm::vec3(0, 0, 0));
 	skyboxWorld->addChild(skyboxTransform);
 	skybox = new Skybox();
 	skyboxTransform->addChild(skybox);
 
-	//Place objects in world
-	world = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
+	grassWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
 
 	Transform* groundTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(0, 0, 0));
 	groundTransform->addChild(plane);
-	world->addChild(groundTransform);
+	grassWorld->addChild(groundTransform);
+
+	//Place objects in world
+	world = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
 
 	// Ride
 	// Base Plate
@@ -160,7 +177,7 @@ bool Window::initializeObjects()
 	Transform* spinnerTube = new Transform(glm::scale(glm::vec3(15, 1, 1)), glm::mat4(1), glm::vec3(0, 0, 0));
 	spinnerTube->addChild(cube);
 	spinner->addChild(spinnerTube);
-	Transform* pivot = new Transform(glm::scale(glm::vec3(.15)), glm::mat4(1), glm::vec3(0, .5, 0));
+	Transform* pivot = new Transform(glm::scale(glm::vec3(.25)), glm::mat4(1), glm::vec3(0, .5, 0));
 	pivot->addChild(cone);
 	spinner->addChild(pivot);
 	Transform* counterWeight = new Transform(glm::scale(glm::vec3(2)), glm::mat4(1), glm::vec3(-8, 0, 0));
@@ -170,21 +187,24 @@ bool Window::initializeObjects()
 	// Chair
 	chair = new Transform(glm::scale(glm::vec3(1)), glm::rotate(-glm::half_pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(8, 1.5, 0));
 	spinner->addChild(chair);
-	Transform* chairSeat = new Transform(glm::scale(glm::vec3(8, 3, 2)), glm::mat4(1), glm::vec3(0, 0, 0));
+	chairSeat = new Transform(glm::scale(glm::vec3(8, 3, 2)), glm::mat4(1), glm::vec3(0, 0, 0));
 	chairSeat->addChild(cube);
 	chair->addChild(chairSeat);
+	Transform* chairSeatHat = new Transform(glm::scale(glm::vec3(.15)), glm::mat4(1), glm::vec3(0, .5, 0));
+	chairSeatHat->addChild(cone);
+	chairSeat->addChild(chairSeatHat);
 
 	// Create Environment Mapped world
 	environmentMappedWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
 
-	Transform* discoBallTransform = new Transform(glm::scale(glm::vec3(5)), glm::rotate(glm::half_pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(0, 5, 0));
-	Geometry* discoBall = new DiscoBall(100, 200);
+	discoBallTransform = new Transform(glm::scale(glm::vec3(3)), glm::rotate(glm::half_pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(5, 5, 20));
+	Geometry* discoBall = new DiscoBall(10, 20);
 	discoBallTransform->addChild(discoBall);
 	environmentMappedWorld->addChild(discoBallTransform);
 
 	// Initialize camera
-	cameraTransform = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, 0, 20));
-	chair->addChild(cameraTransform);
+	cameraTransform = new Transform(glm::mat4(1), glm::rotate(glm::pi<float>(), Window::UP), glm::vec3(0, 5, -20));
+	world->addChild(cameraTransform);
 	environmentMappedWorld->addChild(cameraTransform);
 	skyboxWorld->addChild(cameraTransform);
 	mainCamera = new Camera();
@@ -195,13 +215,14 @@ bool Window::initializeObjects()
 	pointLightTransform->addChild(cube);
 	world->addChild(pointLightTransform);
 
-	Transform* spotLightTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(-3.0, 10, 6.0));
-	spotLightTransform->addChild(cube);
+	pointLight = new PointLight(glm::vec3(3.0, 10.0, 6.0), glm::vec3(0.6, 0.6, 0.8), glm::vec3(1, .005, 0.0));
+	pointLight->sendLightToShader(phongShader);
+
+	Transform* spotLightTransform = new Transform(glm::scale(glm::vec3(.5)), glm::rotate(glm::quarter_pi<float>()/2, glm::vec3(-1, 0, 0)), glm::vec3(0, 20, -6.0));
+	spotLightTransform->addChild(cone);
 	world->addChild(spotLightTransform);
 
-	pointLight = new PointLight(glm::vec3(3.0, 10.0, 6.0), glm::vec3(0.6, 0.6, 0.8), glm::vec3(1, 0, 0.0));
-	pointLight->sendLightToShader(phongShader);
-	spotLight = new SpotLight(glm::vec3(-3.0, 10.0, 6.0), glm::vec3(0.8, 0.6, 0.6), glm::vec3(1, 0, 0.0), glm::normalize(glm::vec3(0,0,0) - glm::vec3(-3.0, 3.0, 6.0)), 0.5, 20);
+	spotLight = new SpotLight(spotLightTransform->getRelativeLocation(), glm::vec3(0.8, 0.6, 0.6), glm::vec3(1, .005, 0.0), glm::normalize(glm::vec3(0,0,0) - spotLightTransform->getRelativeLocation()), 0.3, 20);
 	spotLight->sendLightToShader(phongShader);
 
 	return true;
@@ -310,6 +331,27 @@ void Window::idleCallback()
 	float currentFrame = glfwGetTime();
 	deltaTime = currentFrame - time;
 	time = currentFrame;
+
+	glm::mat4 rotationMatrix = glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, Window::UP);
+	if (Window::rotateSpinner) {
+		spinner->applyTransformation(rotationMatrix);
+	}
+	if (Window::rotateChair != 0) {
+		chair->applyTransformation(glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, glm::vec3(0, 0, Window::rotateChair)));
+	}
+
+	// Chair rotation
+	if (Window::rotateChairSeat) {
+		float rotationDiff = Window::deltaTime * Window::chairRotationDirection;
+		chairRotationAngle += rotationDiff;
+		if ((chairRotationAngle > chairRotationAngleMax && chairRotationDirection > 0) || ((chairRotationAngle < chairRotationAngleMin && chairRotationDirection < 0))) {
+			chairRotationDirection *= -1;
+		}
+		chairSeat->applyTransformation(glm::rotate(rotationDiff, glm::vec3(1, 0, 0)));
+	}
+
+	// Disco rotation
+	discoBallTransform->applyTransformation(glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, glm::vec3(0, 0, 1)));
 }
 
 void Window::displayCallback(GLFWwindow* window)
@@ -317,16 +359,23 @@ void Window::displayCallback(GLFWwindow* window)
 	// Clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
+	// Render grass
+	diffuseMat->sendMatToShader(phongShader);
+	grass->sendTextureToShader(phongShader);
+	grassWorld->draw(phongShader, glm::mat4(1));
+
 	// Render the world
+	shinyAndDiffuseMat->sendMatToShader(phongShader);
+	white->sendTextureToShader(phongShader);
 	world->draw(phongShader, glm::mat4(1));
 
 	// Render environment mapped world
-	skyboxTexture->sendTextureToShader(Window::environmentMapShaderProgram);
-	//environmentMappedWorld->draw(environmentMapShaderProgram, glm::mat4(1));
+	skyboxTexture->sendTextureToShader(environmentMapShaderProgram);
+	environmentMappedWorld->draw(environmentMapShaderProgram, glm::mat4(1));
 
 	// Render skybox last as an optimization
-	skyboxTexture->sendTextureToShader(Window::skyboxShaderProgram);
-	//skyboxWorld->draw(skyboxShaderProgram, glm::mat4(1));
+	skyboxTexture->sendTextureToShader(skyboxShaderProgram);
+	skyboxWorld->draw(skyboxShaderProgram, glm::mat4(1));
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -341,12 +390,6 @@ void Window::displayCallback(GLFWwindow* window)
 	}
 
 	cameraTransform->applyTransformation(translateMatrix * rotationMatrix);
-
-	// Rotate baseplate
-	rotationMatrix = glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, Window::UP);
-	basePlate->applyTransformation(rotationMatrix);
-	spinner->applyTransformation(rotationMatrix);
-	chair->applyTransformation(glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, glm::vec3(0, 0, -1)));
 
 	// Swap buffers.
 	glfwSwapBuffers(window);
@@ -386,6 +429,22 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 			break;
 		case GLFW_KEY_LEFT_CONTROL:
 			Window::moveUp = -1;
+			break;
+		case GLFW_KEY_1:
+			std::cout << "Toggling spinner" << std::endl;
+			Window::rotateSpinner = !Window::rotateSpinner;
+			break;
+		case GLFW_KEY_2:
+			std::cout << "Toggling chair rotation" << std::endl;
+			Window::rotateChair++;
+			if (Window::rotateChair >= 2) {
+				Window::rotateChair = -1;
+			}
+			break;
+		case GLFW_KEY_3:
+			std::cout << "Toggling chair seat angle rotation" << std::endl;
+			Window::rotateChairSeat = !Window::rotateChairSeat;
+			break;
 		default:
 			break;
 		}
