@@ -7,9 +7,7 @@
 #include "Geometry.h"
 #include "TriangleGeometry.h"
 #include "QuadGeometry.h"
-#include "DiscoBall.h"
 #include "Skybox.h"
-#include "CubeMapTexture.h"
 #include "Texture.h"
 #include "Materials.h"
 #include "Camera.h"
@@ -40,55 +38,24 @@ public:
 
 	// Shader Program ID
 	static GLuint phongShader;
-	static GLuint environmentMapShaderProgram;
-	static GLuint skyboxShaderProgram;
+	static GLuint toonShader;
 	static std::vector<GLuint> shaders;
 
-	// Textures
-	static CubeMapTexture* skyboxTexture;
-	static Texture* white;
-	static Texture* grass;
-	static Texture* clock;
+	// Models to Render
+	static Geometry* lobby;
+	static Geometry* astronaut_idle;
+	static Geometry* astronaut_movingOne;
+	static Geometry* astronaut_movingTwo;
 
 	// Materials
-	static Materials* diffuseMat;
-	static Materials* shinyAndDiffuseMat;
+	static Materials* lobbyMat;
 
-	// Models to Render
-	static Geometry* plane;
-	static Geometry* cube;
-	static Geometry* cone;
-	static Geometry* cylinder;
-	static Geometry* clockModel;
-
-	// Skybox
-	static Transform* skyboxWorld;
-	static Transform* skyboxTransform;
-	static Geometry* skybox;
-
-	// Grass
-	static Transform* grassWorld;
+	// Textures
+	static Texture* lobbyTexture;
+	static Texture* solidTexture;
 
 	// World
 	static Transform* world;
-	static Transform* basePlate;
-	static Transform* spinner;
-	static Transform* chair;
-	static Transform* chairSeat;
-
-	static float chairRotationAngle;
-	static float chairRotationDirection;
-	static float chairRotationAngleMin;
-	static float chairRotationAngleMax;
-
-	// Animations
-	static bool rotateSpinner;
-	static float rotateChair;
-	static bool rotateChairSeat;
-
-	// Environment Mapped World
-	static Transform* environmentMappedWorld;
-	static Transform* discoBallTransform;
 
 	// Camera Matrices
 	static glm::mat4 projection;
@@ -114,10 +81,11 @@ public:
 
 	// Callbacks
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 	static void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos);
 
 private:
-	static void updateProjection(const glm::mat4& projection);
+	static glm::vec3 hexToRGB(int hex);
 };
 
 #endif

@@ -134,6 +134,10 @@ QuadGeometry::~QuadGeometry()
 
 void QuadGeometry::draw(GLuint shader, const glm::mat4& C)
 {
+	if (materials) {
+		materials->sendMatToShader(shader);
+	}
+
 	if (texture) {
 		texture->sendTextureToShader(shader);
 	}

@@ -2,6 +2,7 @@
 #define _TRANSFORM_H_
 
 #include "Node.h"
+#include "Materials.h"
 
 #include <vector>
 #include <map>
@@ -11,6 +12,7 @@ class Transform : public Node
 private:
 	glm::mat4 transformMatrix;
 	std::vector<Node*> children;
+	Materials* materials;
 
 public:
 	Transform(const glm::mat4 scale, const glm::mat4 rotation, const glm::vec3 location);
@@ -20,6 +22,7 @@ public:
 	void update();
 	void addChild(Node* child);
 	void applyTransformation(glm::mat4 transformationMatrix);
+	void setMaterials(Materials* newMaterials) { materials = newMaterials; }
 	glm::vec3 getRelativeLocation() { return glm::vec3(transformMatrix[3][0], transformMatrix[3][1], transformMatrix[3][2]); }
 	glm::mat4 getTransformMatrix() { return transformMatrix; }
 };

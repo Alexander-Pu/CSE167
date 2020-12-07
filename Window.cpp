@@ -20,54 +20,24 @@ float Window::moveUp = 0;
 
 // Shader Program ID
 GLuint Window::phongShader;
-GLuint Window::environmentMapShaderProgram;
-GLuint Window::skyboxShaderProgram;
+GLuint Window::toonShader;
 std::vector<GLuint> Window::shaders;
 
-// Textures 
-CubeMapTexture* Window::skyboxTexture;
-Texture* Window::white;
-Texture* Window::grass;
-Texture* Window::clock;
+// Models to Render
+Geometry* Window::lobby;
+Geometry* Window::astronaut_idle;
+Geometry* Window::astronaut_movingOne;
+Geometry* Window::astronaut_movingTwo;
 
 // Materials
-Materials* Window::diffuseMat;
-Materials* Window::shinyAndDiffuseMat;
+Materials* Window::lobbyMat;
 
-// Models to Render
-Geometry* Window::plane;
-Geometry* Window::cube;
-Geometry* Window::cone;
-Geometry* Window::cylinder;
-Geometry* Window::clockModel;
-
-// Skybox 
-Transform* Window::skyboxWorld;
-Transform* Window::skyboxTransform;
-Geometry* Window::skybox;
-
-// Grass world
-Transform* Window::grassWorld;
+// Textures 
+Texture* Window::lobbyTexture;
+Texture* Window::solidTexture;
 
 // World
 Transform* Window::world;
-Transform* Window::basePlate;
-Transform* Window::spinner;
-Transform* Window::chair;
-Transform* Window::chairSeat;
-
-float Window::chairRotationAngle = 0;
-float Window::chairRotationDirection = 1;
-float Window::chairRotationAngleMin = -.75*glm::quarter_pi<float>();
-float Window::chairRotationAngleMax = .75 * glm::quarter_pi<float>();
-
-bool Window::rotateSpinner = false;
-float Window::rotateChair = 0;
-bool Window::rotateChairSeat = false;
-
-// Environment Mapped World
-Transform* Window::environmentMappedWorld;
-Transform* Window::discoBallTransform;
 
 // Camera Matrices 
 glm::mat4 Window::projection; 
@@ -79,14 +49,10 @@ PointLight* Window::pointLight;
 SpotLight* Window::spotLight;
 
 bool Window::initializeProgram() {
-
-	// Create a shader program with a vertex shader and a fragment shader.
 	phongShader = LoadShaders("shaders/realistic.vert", "shaders/realistic.frag");
-	environmentMapShaderProgram = LoadShaders("shaders/environment_map.vert", "shaders/environment_map.frag");
-	skyboxShaderProgram = LoadShaders("shaders/skybox.vert", "shaders/skybox.frag");
+	toonShader = LoadShaders("shaders/toon.vert", "shaders/toon.frag");
 	shaders.push_back(phongShader);
-	shaders.push_back(skyboxShaderProgram);
-	shaders.push_back(environmentMapShaderProgram);
+	shaders.push_back(toonShader);
 	bool shadersLoaded = true;
 	for (GLuint shader : shaders) {
 		shadersLoaded = shadersLoaded | shader;
@@ -101,9 +67,6 @@ bool Window::initializeProgram() {
 		return false;
 	}
 
-	// Call update after the shaders are loaded
-	updateProjection(glm::perspective(glm::radians(60.0), double(width) / (double)height, 1.0, 1000.0));
-
 	// Enable face culling to only show "front" of faces.
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -113,124 +76,64 @@ bool Window::initializeProgram() {
 
 bool Window::initializeObjects()
 {
-	// Create textures
-	std::vector<std::string> skyboxTextures
-	{
-		"CubeMapImages/Day_Right.jpg",
-		"CubeMapImages/Day_Left.jpg",
-		"CubeMapImages/Day_Top.jpg",
-		"CubeMapImages/Day_Bottom.jpg",
-		"CubeMapImages/Day_Front.jpg",
-		"CubeMapImages/Day_Back.jpg"
-	};
-	skyboxTexture = new CubeMapTexture(skyboxTextures);
-	skyboxTexture->sendTextureToShader(Window::skyboxShaderProgram);
-	skyboxTexture->sendTextureToShader(Window::environmentMapShaderProgram);
+	// Lobby.
+	lobby = new TriangleGeometry("Objects/amongus_lobby.obj");
 
-	white = new Texture("Textures/white.jpg", GL_REPEAT);
-	grass = new Texture("Textures/grass.png", GL_REPEAT);
-	clock = new Texture("Textures/clock.jpg", GL_CLAMP);
+	lobbyMat = new Materials(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.9), glm::vec3(0), 64.0);
+	lobby->setMaterials(lobbyMat);
 
-	// Materials
-	diffuseMat = new Materials(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.9), glm::vec3(0), 64.0);
-	shinyAndDiffuseMat = new Materials(glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.9), glm::vec3(0.9), 64.0);
+	lobbyTexture = new Texture("Textures/amongus_lobby.png", GL_REPEAT);
+	lobby->setTexture(lobbyTexture);
 
-	// Create 3d models of objects.
-	plane = new TriangleGeometry("Objects/plane.objmodel", grass);
-	cube = new TriangleGeometry("Objects/cube.objmodel", white);
-	cone = new TriangleGeometry("Objects/cone.objmodel", white);
-	cylinder = new TriangleGeometry("Objects/cylinder.objmodel", white);
-	clockModel = new QuadGeometry("Objects/clock.objmodel", clock);
+	// Astronaut
+	solidTexture = new Texture("Textures/white.jpg", GL_REPEAT);
 
-	// Initialize skybox
-	skyboxWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
-	skyboxTransform = new Transform(glm::scale(glm::vec3(500)), glm::mat4(1), glm::vec3(0, 0, 0));
-	skyboxWorld->addChild(skyboxTransform);
-	skybox = new Skybox();
-	skyboxTransform->addChild(skybox);
-
-	grassWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
-
-	Transform* groundTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(0, 0, 0));
-	groundTransform->addChild(plane);
-	grassWorld->addChild(groundTransform);
+	astronaut_idle = new TriangleGeometry("Objects/amongus_astro_still.obj");
+	astronaut_idle->setTexture(solidTexture);
+	astronaut_movingOne = new TriangleGeometry("Objects/amongus_astro_moving1.obj");
+	astronaut_movingOne->setTexture(solidTexture);
+	astronaut_movingTwo = new TriangleGeometry("Objects/amongus_astro_moving2.obj");
+	astronaut_movingTwo->setTexture(solidTexture);
 
 	//Place objects in world
 	world = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
+	world->addChild(lobby);
 
-	// Ride
-	// Base Plate
-	basePlate = new Transform(glm::scale(glm::vec3(1)), glm::rotate(glm::pi<float>(), Window::UP), glm::vec3(0, 0, 0));
-	world->addChild(basePlate);
-	Transform* basePlateCylinder = new Transform(glm::scale(glm::vec3(5, 1, 5)), glm::mat4(1), glm::vec3(0, 0, 0));
-	basePlateCylinder->addChild(cylinder);
-	basePlate->addChild(basePlateCylinder);
-	Transform* basePlateCube = new Transform(glm::scale(glm::vec3(10, 1, 10)), glm::mat4(1), glm::vec3(0, 2, 0));
-	basePlateCube->addChild(cube);
-	basePlate->addChild(basePlateCube);
-	Transform* basePlatePillar = new Transform(glm::scale(glm::vec3(1, 20, 1)), glm::mat4(1), glm::vec3(0, 10, -5));
-	basePlatePillar->addChild(cube);
-	basePlate->addChild(basePlatePillar);
-	Transform* basePlateArm = new Transform(glm::scale(glm::vec3(1, 1, 5)), glm::mat4(1), glm::vec3(0, 20, -3));
-	basePlateArm->addChild(cube);
-	basePlate->addChild(basePlateArm);
+	Transform* redAstronaut = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, .4, 10));
+	redAstronaut->addChild(astronaut_idle);
+	Materials* redMat = new Materials(hexToRGB(0xC51211), glm::vec3(0.9), glm::vec3(0), 1);
+	redAstronaut->setMaterials(redMat);
+	world->addChild(redAstronaut);
 
-	// Spinner
-	spinner = new Transform(glm::scale(glm::vec3(1)), glm::rotate(glm::half_pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(0, 20, 0));
-	basePlate->addChild(spinner);
-	Transform* spinnerTube = new Transform(glm::scale(glm::vec3(15, 1, 1)), glm::mat4(1), glm::vec3(0, 0, 0));
-	spinnerTube->addChild(cube);
-	spinner->addChild(spinnerTube);
-	Transform* pivot = new Transform(glm::scale(glm::vec3(.25)), glm::mat4(1), glm::vec3(0, .5, 0));
-	pivot->addChild(cone);
-	spinner->addChild(pivot);
-	Transform* counterWeight = new Transform(glm::scale(glm::vec3(2)), glm::mat4(1), glm::vec3(-8, 0, 0));
-	counterWeight->addChild(cube);
-	spinner->addChild(counterWeight);
+	Transform* pinkAstronaut = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(3, .4, 10));
+	pinkAstronaut->addChild(astronaut_movingOne);
+	Materials* pinkMat = new Materials(hexToRGB(0xEC54BB), glm::vec3(0.9), glm::vec3(0), 1);
+	pinkAstronaut->setMaterials(pinkMat);
+	world->addChild(pinkAstronaut);
 
-	// Chair
-	chair = new Transform(glm::scale(glm::vec3(1)), glm::rotate(-glm::half_pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(8, 1.5, 0));
-	spinner->addChild(chair);
-	chairSeat = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(0, 0, 0));
-	chair->addChild(chairSeat);
-	Transform* chairSeatChair = new Transform(glm::scale(glm::vec3(8, 3, 2)), glm::mat4(1), glm::vec3(0, 0, 0));
-	chairSeatChair->addChild(cube);
-	chairSeat->addChild(chairSeatChair);
-	Transform* chairSeatHat = new Transform(glm::scale(glm::vec3(.15)), glm::mat4(1), glm::vec3(0, 1.5, 0));
-	chairSeatHat->addChild(cone);
-	chairSeat->addChild(chairSeatHat);
-	Transform* chairClock = new Transform(glm::scale(glm::vec3(3)), glm::rotate(-glm::half_pi<float>(), glm::vec3(0, 1, 0)), glm::vec3(0, 0, 1));
-	chairClock->addChild(clockModel);
-	chairSeat->addChild(chairClock);
-
-	// Create Environment Mapped world
-	environmentMappedWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
-
-	discoBallTransform = new Transform(glm::scale(glm::vec3(1)), glm::rotate(glm::pi<float>(), glm::vec3(1, 0, 0)), glm::vec3(0, 20, -2));
-	Geometry* discoBall = new DiscoBall(10, 20);
-	discoBallTransform->addChild(discoBall);
-	environmentMappedWorld->addChild(discoBallTransform);
-
+	Transform* whiteAstronaut = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(-3, .4, 10));
+	whiteAstronaut->addChild(astronaut_movingTwo);
+	Materials* whiteMat = new Materials(hexToRGB(0xD6DFF1), glm::vec3(0.9), glm::vec3(0), 1);
+	whiteAstronaut->setMaterials(whiteMat);
+	world->addChild(whiteAstronaut);
+	
 	// Initialize camera
-	cameraTransform = new Transform(glm::mat4(1), glm::rotate(glm::pi<float>(), Window::UP), glm::vec3(0, 5,-20));
+	cameraTransform = new Transform(glm::mat4(1), glm::rotate(glm::quarter_pi<float>(), glm::vec3(-1, 0, 0)), glm::vec3(0, 15, 20));
 	world->addChild(cameraTransform);
-	mainCamera = new Camera(shaders);
+	mainCamera = new Camera(shaders, glm::radians(60.0), double(Window::width) / (double)Window::height, 1, 1000);
 	cameraTransform->addChild(mainCamera);
 
 	// Initialize lights
 	Transform* pointLightTransform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), glm::vec3(3.0, 10, 6.0));
-	pointLightTransform->addChild(cube);
 	world->addChild(pointLightTransform);
 
 	pointLight = new PointLight(glm::vec3(3.0, 10.0, 6.0), glm::vec3(0.6, 0.6, 0.8), glm::vec3(1, .005, 0.0));
 	world->addChild(pointLight);
 
-	Transform* spotLightTransform = new Transform(glm::scale(glm::vec3(.5)), glm::rotate(glm::quarter_pi<float>()/2, glm::vec3(-1, 0, 0)), glm::vec3(0, 20, -6.0));
-	spotLightTransform->addChild(cone);
+	Transform* spotLightTransform = new Transform(glm::scale(glm::vec3(.5)), glm::rotate(glm::quarter_pi<float>()/2, glm::vec3(-1, 0, 0)), glm::vec3(0, 20, 6.0));
 	world->addChild(spotLightTransform);
 
 	spotLight = new SpotLight(spotLightTransform->getRelativeLocation(), glm::vec3(0.8, 0.6, 0.6), glm::vec3(1, .005, 0.0), glm::normalize(glm::vec3(0,0,0) - spotLightTransform->getRelativeLocation()), 0.3, 20);
-	grassWorld->addChild(spotLight);
 	world->addChild(spotLight);
 
 	return true;
@@ -238,27 +141,20 @@ bool Window::initializeObjects()
 
 void Window::cleanUp()
 {
-	// Delete textures
-	delete skyboxTexture;
-	delete grass;
-
 	// Deallocate the objects.
-	delete cube;
-	delete cone;
-	delete cylinder;
+	delete lobby;
+	
+	// Delete materials
+	delete lobbyMat;
 
-	// Deallocate skybox.
-	delete skyboxTransform;
-	delete skybox;
+	// Delete textures
+	delete lobbyTexture;
 
 	// Deallocate worlds.
 	delete world;
-	delete environmentMappedWorld;
 
 	// Delete the shader program.
 	glDeleteProgram(phongShader);
-	glDeleteProgram(skyboxShaderProgram);
-	glDeleteProgram(environmentMapShaderProgram);
 }
 
 GLFWwindow* Window::createWindow(int width, int height)
@@ -329,9 +225,6 @@ void Window::resizeCallback(GLFWwindow* window, int width, int height)
 	Window::height = height;
 	// Set the viewport size.
 	glViewport(0, 0, width, height);
-
-	// Set the projection matrix.
-	updateProjection(glm::perspective(glm::radians(60.0), double(width) / (double)height, 1.0, 1000.0));
 }
 
 void Window::idleCallback()
@@ -339,25 +232,6 @@ void Window::idleCallback()
 	float currentFrame = glfwGetTime();
 	deltaTime = currentFrame - time;
 	time = currentFrame;
-
-	glm::mat4 rotationMatrix = glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, Window::UP);
-	if (Window::rotateSpinner) {
-		spinner->applyTransformation(rotationMatrix);
-		discoBallTransform->applyTransformation(glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, glm::vec3(0, 0, 1)));
-	}
-	if (Window::rotateChair != 0) {
-		chair->applyTransformation(glm::rotate(Window::deltaTime * .5f * Window::ROTATION_SPEED, glm::vec3(0, 0, Window::rotateChair)));
-	}
-
-	// Chair rotation
-	if (Window::rotateChairSeat) {
-		float rotationDiff = Window::deltaTime * Window::chairRotationDirection;
-		chairRotationAngle += rotationDiff;
-		if ((chairRotationAngle > chairRotationAngleMax && chairRotationDirection > 0) || ((chairRotationAngle < chairRotationAngleMin && chairRotationDirection < 0))) {
-			chairRotationDirection *= -1;
-		}
-		chairSeat->applyTransformation(glm::rotate(rotationDiff, glm::vec3(1, 0, 0)));
-	}
 }
 
 void Window::displayCallback(GLFWwindow* window)
@@ -365,23 +239,7 @@ void Window::displayCallback(GLFWwindow* window)
 	// Clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
-	// Render grass
-	diffuseMat->sendMatToShader(phongShader);
-	grass->sendTextureToShader(phongShader);
-	grassWorld->draw(phongShader, glm::mat4(1));
-
-	// Render the world
-	shinyAndDiffuseMat->sendMatToShader(phongShader);
-	white->sendTextureToShader(phongShader);
-	world->draw(phongShader, glm::mat4(1));
-
-	// Render environment mapped world
-	skyboxTexture->sendTextureToShader(environmentMapShaderProgram);
-	environmentMappedWorld->draw(environmentMapShaderProgram, glm::mat4(1));
-
-	// Render skybox last as an optimization
-	skyboxTexture->sendTextureToShader(skyboxShaderProgram);
-	skyboxWorld->draw(skyboxShaderProgram, glm::mat4(1));
+	world->draw(toonShader, glm::mat4(1));
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -436,21 +294,6 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 		case GLFW_KEY_LEFT_CONTROL:
 			Window::moveUp = -1;
 			break;
-		case GLFW_KEY_1:
-			std::cout << "Toggling spinner" << std::endl;
-			Window::rotateSpinner = !Window::rotateSpinner;
-			break;
-		case GLFW_KEY_2:
-			std::cout << "Toggling chair rotation" << std::endl;
-			Window::rotateChair++;
-			if (Window::rotateChair >= 2) {
-				Window::rotateChair = -1;
-			}
-			break;
-		case GLFW_KEY_3:
-			std::cout << "Toggling chair seat angle rotation" << std::endl;
-			Window::rotateChairSeat = !Window::rotateChairSeat;
-			break;
 		default:
 			break;
 		}
@@ -479,6 +322,13 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 	}
 }
 
+void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	GLfloat fov = mainCamera->getFov();
+	GLfloat newFov = glm::min(glm::max(glm::radians(5.0), fov - glm::radians(yoffset)), glm::radians(60.0));
+	mainCamera->setFov(newFov);
+}
+
 void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 {
 	// No longer track mouse movement outside of window
@@ -487,12 +337,11 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 	}
 }
 
-void Window::updateProjection(const glm::mat4& newProjection) {
-	Window::projection = newProjection;
+glm::vec3 Window::hexToRGB(int hex) {
+	glm::vec3 rgb;
+	rgb.r = ((hex >> 16) & 0xFF) / 255.0;
+	rgb.g = ((hex >> 8) & 0xFF) / 255.0;
+	rgb.b = ((hex) & 0xFF) / 255.0;
 
-	for (GLuint shader : shaders) {
-		glUseProgram(shader);
-		glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, glm::value_ptr(Window::projection));
-		glUseProgram(0);
-	}
+	return rgb;
 }

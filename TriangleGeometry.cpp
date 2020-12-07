@@ -1,9 +1,7 @@
 #include "TriangleGeometry.h"
 
-TriangleGeometry::TriangleGeometry(const std::string objFileName, Texture* newTexture)
+TriangleGeometry::TriangleGeometry(const std::string objFileName)
 {
-	texture = newTexture;
-
 	// ------------------------- LOAD GEOMETRY FROM FILE -------------------------
 	std::ifstream objFile(objFileName);
 	std::vector<glm::vec3> vertexes;
@@ -134,6 +132,10 @@ TriangleGeometry::~TriangleGeometry()
 
 void TriangleGeometry::draw(GLuint shader, const glm::mat4& C)
 {
+	if (materials) {
+		materials->sendMatToShader(shader);
+	}
+
 	if (texture) {
 		texture->sendTextureToShader(shader);
 	}

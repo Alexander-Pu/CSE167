@@ -2,6 +2,7 @@
 #define _GEOMETRY_H_
 
 #include "Node.h"
+#include "Materials.h"
 #include "Texture.h"
 
 class Geometry : public Node
@@ -9,7 +10,8 @@ class Geometry : public Node
 protected:
 	int numIndices;
 	int numVertices;
-	Texture* texture;
+	Materials* materials = NULL;
+	Texture* texture = NULL;
 
 	GLuint VAO;
 	GLuint VBO[3], EBO;
@@ -17,6 +19,8 @@ protected:
 public:
 	virtual void draw(GLuint shader, const glm::mat4& C) = 0;
 	virtual void update() = 0;
+	void setMaterials(Materials* newMaterials) { materials = newMaterials; }
+	void setTexture(Texture* newTexture) { texture = newTexture; }
 };
 
 #endif

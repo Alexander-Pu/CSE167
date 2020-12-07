@@ -2,6 +2,7 @@
 
 Transform::Transform(const glm::mat4 scale, const glm::mat4 rotation, const glm::vec3 location)
 	: transformMatrix(glm::translate(location) * rotation * scale)
+	, materials(NULL)
 {
 }
 
@@ -14,6 +15,10 @@ Transform::~Transform()
 
 void Transform::draw(GLuint shader, const glm::mat4& C)
 {
+	if (materials) {
+		materials->sendMatToShader(shader);
+	}
+
 	glm::mat4 newMatrix = C * transformMatrix;
 
 	for (Node* child : children) {
