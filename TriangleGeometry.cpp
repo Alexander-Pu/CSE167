@@ -29,6 +29,13 @@ TriangleGeometry::TriangleGeometry(const std::string objFileName)
 				glm::vec3 point;
 				ss >> point.x >> point.y >> point.z;
 
+				minX = glm::min(minX, point.x);
+				maxX = glm::min(maxX, point.x);
+				minY = glm::min(minY, point.y);
+				maxY = glm::min(maxY, point.y);
+				minZ = glm::min(minZ, point.z);
+				maxZ = glm::min(maxZ, point.z);
+
 				vertexes.push_back(point);
 			}
 			else if (label == "vt") {
@@ -69,7 +76,7 @@ TriangleGeometry::TriangleGeometry(const std::string objFileName)
 
 	for (int i = 0; i < vertexIndices.size(); i++) {
 		realVertexes.push_back(vertexes[vertexIndices[i]]);
-	}	
+	}
 	for (int i = 0; i < vertexIndices.size(); i++) {
 		realTextureCoordinates.push_back(textureCoordinates[textureCoordinateIndices[i]]);
 	}
@@ -159,7 +166,7 @@ void TriangleGeometry::draw(GLuint shader, const glm::mat4& C)
 	glUseProgram(0);
 }
 
-void TriangleGeometry::update()
+void TriangleGeometry::update(const glm::mat4& C)
 {
 }
 

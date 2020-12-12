@@ -1,10 +1,12 @@
 #version 330 core
 
+// Inputs to the fragment shader are the outputs of the same name from the vertex shader.
+// Note that you do not have access to the vertex shader's default output, gl_Position.
 in vec3 worldPosition;
 in vec2 fragTexCoordinates;
 in vec3 worldNormal;
 
-uniform sampler2D tex;
+// View variables
 uniform vec3 eyePos;
 
 // Material attributes
@@ -15,6 +17,9 @@ struct Material {
     float shininess;
 };
 uniform Material material;
+
+// Texture
+uniform sampler2D tex;
 
 // Directional Light attributes
 struct DirectionalLight {
@@ -46,65 +51,58 @@ uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
 
 // Helper functions
 float when_lt(float x, float y);
-float when_false(float bool_val);
 
 vec3 calc_point_light(PointLight light, vec3 worldNormal, vec3 eyeVector);
 vec3 calc_spot_light(SpotLight light, vec3 worldNormal, vec3 eyeVector);
 
+// You can output many things. The first vec4 type output determines the color of the fragment
 out vec4 fragColor;
 
 void main()
 {
-    vec3 worldNormal = normalize(worldNormal);
+    vec3 normalizedWorldNormal = normalize(worldNormal);
     vec3 eyeVector = normalize(eyePos - worldPosition);
-
-    // ------------------------------------------------------------------------------------------------------------
-    // Directional light calculation
-    totalLight = vec3(0, 0, 0);
     
     // ------------------------------------------------------------------------------------------------------------
     // Point light calculations
+    vec3 pl_total = vec3(0, 0, 0);
+
     for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
-        totalLight += calc_point_light(pointLights[i], worldNormal, eyeVector);
+        pl_total += calc_point_light(pointLights[i], normalizedWorldNormal, eyeVector);
     }
 
     // ------------------------------------------------------------------------------------------------------------
     // Spot light calculations
-    for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
-        totalLight += calc_spot_light(spotLights[i], worldNormal, eyeVector);
+    vec3 sl_total = vec3(0, 0, 0);
+
+    for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
+        sl_total += calc_spot_light(spotLights[i], normalizedWorldNormal, eyeVector);
     }
 
     // ------------------------------------------------------------------------------------------------------------
-    // Add ambient light
-    totalLight += material.ambient;
+    vec3 totalColor = (pl_total + sl_total + material.ambient);
 
-    fragColor = vec4(totalLight.rgb * texture(tex, textureCoordinates), 1.0f);
+    fragColor = vec4(texture(tex, fragTexCoordinates).rgb * totalColor, 1.0f);
 }
+
 
 float when_lt(float x, float y) {
     return max(sign(y - x), 0);
 }
 
-
-float when_false(float boolVal) {
-    return 1.0 - boolVal;
-}
-
 vec3 calc_point_light(PointLight light, vec3 worldNormal, vec3 eyeVector) {
-    vec3 vec_to_light = light.position - worldPosition;
-    vec3 vec_to_light_norm = normalize(vec_to_light);
+    vec3 pl_total = vec3(0.0, 0.0, 0.0);
+    vec3 pl_vec_to_light = light.position - worldPosition;
+    vec3 pl_vec_to_light_norm = normalize(pl_vec_to_light);
 
-    float pl_dot = max(dot(vec_to_light_norm, worldNormal), 0.0);
+    float pl_dot = max(dot(pl_vec_to_light_norm, worldNormal), 0.0);
 
-    // Diffuse color
     vec3 pl_diffuse = material.diffuse * pl_dot;
     
-    // Specular color
-    vec3 pl_reflection = normalize((2 * pl_dot * worldNormal) - vec_to_light_norm);
+    vec3 pl_reflection = normalize((2 * pl_dot * worldNormal) - pl_vec_to_light_norm);
     vec3 pl_specular = material.specular * pow(max(dot(pl_reflection, eyeVector), 0.0), material.shininess); 
 
-    // Attenuation
-    float pl_distance = length(vec_to_light);
+    float pl_distance = length(pl_vec_to_light);
     float pl_intensity = clamp(1.0 / (light.attenuation.z * pow(pl_distance, 2) + light.attenuation.y * pl_distance + light.attenuation.x), 0.0, 1.0);
     return light.color * pl_intensity * (pl_diffuse + pl_specular);
 }
@@ -122,14 +120,8 @@ vec3 calc_spot_light(SpotLight light, vec3 worldNormal, vec3 eyeVector) {
     vec3 sl_reflection = (2 * sl_dot * worldNormal) - sl_vec_to_light_norm;
     vec3 sl_specular = material.specular * pow(max(dot(sl_reflection, eyeVector), 0), material.shininess); 
            
-    float placeholder_boolean = 0.0;
     vec3 sl_reverse_dir = -light.direction;
     float sl_dot_center = max(dot(sl_vec_to_light_norm, sl_reverse_dir), 0);
-    // Within cone
-    // float sl_cone_intensity = 0.0;
-    // if (acos(sl_dot_center) <= light.cutoff) {
-    //     sl_cone_intensity = pow(sl_dot_center, light.exponent);
-    // }
     float sl_cone_intensity = when_lt(acos(sl_dot_center), light.cutoff) * pow(sl_dot_center, light.exponent);
     float final_sl_cone_intensity = max(0, sl_cone_intensity);
 

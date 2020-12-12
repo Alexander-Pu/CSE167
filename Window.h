@@ -13,6 +13,13 @@
 #include "Camera.h"
 #include "PointLight.h"
 #include "SpotLight.h"
+#include "Controller.h"
+#include "Collider.h"
+#include "SphereCollider.h"
+#include "PlaneCollider.h"
+#include "CollisionChecker.h"
+#include "CollisionPusher.h"
+#include "TrackBall.h"
 
 class Window
 {
@@ -31,10 +38,23 @@ public:
 
 	static float time;
 	static float deltaTime;
-	static float rotateLeft;
 	static float moveForward;
+	static float moveBackward;
+	static float strafeLeft;
 	static float strafeRight;
-	static float moveUp;
+
+	static bool mouseRotation;
+	static double mouseX;
+
+	static TrackBall* trackBall;
+
+	static Controller* playerController;
+	static Collider* redCollider;
+	static Collider* pinkCollider;
+	static Collider* whiteCollider;
+	static std::vector<Collider*> obstacleColliders;
+	static CollisionChecker* collisionChecker;
+	static CollisionPusher* collisionPusher;
 
 	// Shader Program ID
 	static GLuint phongShader;
@@ -56,11 +76,16 @@ public:
 
 	// World
 	static Transform* world;
+	static Transform* toonWorld;
 
 	// Camera Matrices
 	static glm::mat4 projection;
+	static Transform* cameraLobbyTransform;
 	static Transform* cameraTransform;
 	static Camera* mainCamera;
+	static bool firstPerson;
+	static Transform* playerCameraTransform;
+	static Camera* playerCamera;
 
 	// Lights
 	static PointLight* pointLight;
@@ -82,6 +107,7 @@ public:
 	// Callbacks
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+	static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 	static void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos);
 
 private:

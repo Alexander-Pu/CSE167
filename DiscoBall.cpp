@@ -95,7 +95,7 @@ DiscoBall::DiscoBall(int numFacesVertical, int numFacesHorizontal)
 		}
 	}
 
-	numIndices = indices.size();
+	numVertices = indices.size();
 
 	// Generate a vertex array (VAO) and vertex buffer object (VBO).
 	glGenVertexArrays(1, &VAO);
@@ -152,13 +152,13 @@ void DiscoBall::draw(GLuint shader, const glm::mat4& C)
 	glBindVertexArray(VAO);
 
 	// Draw the faces of the sphere using quads, indexed with the EBO
-	glDrawElements(GL_QUADS, numIndices, GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_QUADS, numVertices, GL_UNSIGNED_INT, NULL);
 
 	// Unbind the VAO and shader program
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
 
-void DiscoBall::update()
+void DiscoBall::update(const glm::mat4& C)
 {
 }

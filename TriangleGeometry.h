@@ -17,7 +17,7 @@ public:
 	~TriangleGeometry();
 
 	void draw(GLuint shader, const glm::mat4& C);
-	void update();
+	void update(const glm::mat4& C);
 };
 
 #endif

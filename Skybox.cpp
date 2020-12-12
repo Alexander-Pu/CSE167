@@ -50,7 +50,7 @@ Skybox::Skybox()
 		glm::ivec3(6, 1, 2),
 	};
 
-	numIndices = 3 * indices.size();
+	numVertices = 3 * indices.size();
 
 	// Generate a vertex array (VAO) and vertex buffer object (VBO).
 	glGenVertexArrays(1, &VAO);
@@ -99,7 +99,7 @@ void Skybox::draw(GLuint shader, const glm::mat4& C)
 	glBindVertexArray(VAO);
 
 	// Draw the points using triangles, indexed with the EBO
-	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, numVertices, GL_UNSIGNED_INT, 0);
 
 	// Unbind the VAO and shader program
 	glDepthMask(GL_TRUE);

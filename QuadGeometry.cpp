@@ -161,7 +161,7 @@ void QuadGeometry::draw(GLuint shader, const glm::mat4& C)
 	glUseProgram(0);
 }
 
-void QuadGeometry::update()
+void QuadGeometry::update(const glm::mat4& C)
 {
 }
 

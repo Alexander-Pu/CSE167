@@ -20,6 +20,9 @@ void setup_callbacks(GLFWwindow* window)
 	// Set the scrollwheel callback.
 	glfwSetScrollCallback(window, Window::scrollCallback);
 
+	// Set the mouse click callback.
+	glfwSetMouseButtonCallback(window, Window::mouseButtonCallback);
+
 	// Set the mouse move callback.
 	glfwSetCursorPosCallback(window, Window::mouseMoveCallback);
 }

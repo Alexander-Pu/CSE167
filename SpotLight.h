@@ -6,15 +6,16 @@
 class SpotLight : public Node
 {
 private:
-	glm::vec3 pos, color, direction, atten;
+	glm::vec3 color, atten;
 	float cutoff, exponent;
+	std::vector<GLuint> shaders;
 
 public:
-	SpotLight(glm::vec3 pos, glm::vec3 color, glm::vec3 atten, glm::vec3 direction, float cutoff, float exponent);
+	SpotLight(std::vector<GLuint> shaders, glm::vec3 color, glm::vec3 atten, float cutoff, float exponent);
 	~SpotLight();
 
 	void draw(GLuint shader, const glm::mat4& C);
-	void update();
+	void update(const glm::mat4& C);
 };
 
 #endif

@@ -10,7 +10,10 @@
 class Transform : public Node
 {
 private:
-	glm::mat4 transformMatrix;
+	glm::mat4 scale;
+	glm::mat4 rotation;
+	glm::vec3 location;
+	glm::vec3 worldLocation;
 	std::vector<Node*> children;
 	Materials* materials;
 
@@ -19,12 +22,21 @@ public:
 	~Transform();
 
 	void draw(GLuint shader, const glm::mat4& C);
-	void update();
+	void update(const glm::mat4& C);
 	void addChild(Node* child);
-	void applyTransformation(glm::mat4 transformationMatrix);
+	glm::mat4 getScale() { return scale; }
+	void setScale(glm::mat4 newScale) { scale = newScale; }
+	glm::mat4 getRotation() { return rotation; }
+	void setRotation(glm::mat4 newRotation) { rotation = newRotation; }
+	void applyRotation(glm::mat4 newRotation) { rotation = newRotation * rotation; }
+	void applyLocalRotation(glm::mat4 newRotation) { rotation = rotation * newRotation; }
+	void setLocation(glm::vec3 newLocation) { location = newLocation; }
+	glm::vec3 getLocation() { return worldLocation; }
+	void applyTranslation(glm::vec3 direction) { location += direction; }
+	glm::vec3 getForward() { return glm::vec3(rotation * glm::vec4(0, 0, 1, 0)); }
+	glm::vec3 getRight() { return glm::vec3(rotation * glm::vec4(-1, 0, 0, 0)); }
+
 	void setMaterials(Materials* newMaterials) { materials = newMaterials; }
-	glm::vec3 getRelativeLocation() { return glm::vec3(transformMatrix[3][0], transformMatrix[3][1], transformMatrix[3][2]); }
-	glm::mat4 getTransformMatrix() { return transformMatrix; }
 };
 
 #endif

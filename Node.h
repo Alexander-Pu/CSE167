@@ -8,6 +8,7 @@
 #endif
 
 #include <glm/glm.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/transform.hpp>
 #include "glm/gtx/string_cast.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -20,7 +21,7 @@ class Node
 {
 public:
 	virtual void draw(GLuint shader, const glm::mat4& C) = 0;
-	virtual void update() = 0;
+	virtual void update(const glm::mat4& C) = 0;
 };
 
 #endif

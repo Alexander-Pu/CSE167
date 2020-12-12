@@ -17,10 +17,10 @@ void Materials::sendMatToShader(GLuint shaderID) {
 	glUseProgram(shaderID);
 
 	// Get the shader variable locations and send the uniform data to the shader 
-	glUniform3fv(glGetUniformLocation(shaderID, "ambient"), 1, glm::value_ptr(ambient));
-	glUniform3fv(glGetUniformLocation(shaderID, "diffuse"), 1, glm::value_ptr(diffuse));
-	glUniform3fv(glGetUniformLocation(shaderID, "specular"), 1, glm::value_ptr(specular));
-	glUniform1f(glGetUniformLocation(shaderID, "shininess"), shininess);
+	glUniform3fv(glGetUniformLocation(shaderID, "material.ambient"), 1, glm::value_ptr(ambient));
+	glUniform3fv(glGetUniformLocation(shaderID, "material.diffuse"), 1, glm::value_ptr(diffuse));
+	glUniform3fv(glGetUniformLocation(shaderID, "material.specular"), 1, glm::value_ptr(specular));
+	glUniform1f(glGetUniformLocation(shaderID, "material.shininess"), shininess);
 
 	glUseProgram(0);
 }

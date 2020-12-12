@@ -1,10 +1,9 @@
 #include "SpotLight.h"
 
-SpotLight::SpotLight(glm::vec3 pos, glm::vec3 color, glm::vec3 atten, glm::vec3 direction,float cutoff, float exponent)
-	: pos(pos)
+SpotLight::SpotLight(std::vector<GLuint> shaders, glm::vec3 color, glm::vec3 atten,float cutoff, float exponent)
+	: shaders(shaders)
 	, color(color)
 	, atten(atten)
-	, direction(direction)
 	, cutoff(cutoff)
 	, exponent(exponent)
 {
@@ -16,20 +15,25 @@ SpotLight::~SpotLight()
 
 void SpotLight::draw(GLuint shader, const glm::mat4& C)
 {
-	// Activate the shader program 
-	glUseProgram(shader);
+	for (GLuint shader : shaders) {
+		// Activate the shader program 
+		glUseProgram(shader);
 
-	// Get the shader variable locations and send the uniform data to the shader 
-	glUniform3fv(glGetUniformLocation(shader, "sl_pos"), 1, glm::value_ptr(pos));
-	glUniform3fv(glGetUniformLocation(shader, "sl_col"), 1, glm::value_ptr(color));
-	glUniform3fv(glGetUniformLocation(shader, "sl_atten"), 1, glm::value_ptr(atten));
-	glUniform3fv(glGetUniformLocation(shader, "sl_dir"), 1, glm::value_ptr(direction));
-	glUniform1f(glGetUniformLocation(shader, "sl_cutoff"), cutoff);
-	glUniform1f(glGetUniformLocation(shader, "sl_exp"), exponent);
+		glm::vec3 position = glm::vec3(C * glm::vec4(0, 0, 0, 1));
+		glm::vec3 lookAt = glm::normalize(glm::vec3(C * glm::vec4(0, -1, 0, 0)));
 
-	glUseProgram(0);
+		// Get the shader variable locations and send the uniform data to the shader 
+		glUniform3fv(glGetUniformLocation(shader, "spotLights[0].position"), 1, glm::value_ptr(position));
+		glUniform3fv(glGetUniformLocation(shader, "spotLights[0].color"), 1, glm::value_ptr(color));
+		glUniform3fv(glGetUniformLocation(shader, "spotLights[0].atten"), 1, glm::value_ptr(atten));
+		glUniform3fv(glGetUniformLocation(shader, "spotLights[0].direction"), 1, glm::value_ptr(lookAt));
+		glUniform1f(glGetUniformLocation(shader, "spotLights[0].cutoff"), cutoff);
+		glUniform1f(glGetUniformLocation(shader, "spotLights[0].exponent"), exponent);
+
+		glUseProgram(0);
+	}
 }
 
-void SpotLight::update()
+void SpotLight::update(const glm::mat4& C)
 {
 }

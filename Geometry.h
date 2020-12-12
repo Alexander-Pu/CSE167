@@ -8,7 +8,7 @@
 class Geometry : public Node
 {
 protected:
-	int numIndices;
+	float minX, maxX, minY, maxY, minZ, maxZ = 0.0;
 	int numVertices;
 	Materials* materials = NULL;
 	Texture* texture = NULL;
@@ -17,10 +17,14 @@ protected:
 	GLuint VBO[3], EBO;
 
 public:
-	virtual void draw(GLuint shader, const glm::mat4& C) = 0;
-	virtual void update() = 0;
 	void setMaterials(Materials* newMaterials) { materials = newMaterials; }
 	void setTexture(Texture* newTexture) { texture = newTexture; }
+	float getMinX() { return minX; }
+	float getMaxX() { return maxX; }
+	float getMinY() { return minY; }
+	float getMaxY() { return maxY; }
+	float getMinZ() { return minZ; }
+	float getMaxZ() { return maxZ; }
 };
 
 #endif
