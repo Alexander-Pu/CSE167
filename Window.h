@@ -17,9 +17,17 @@
 #include "Collider.h"
 #include "SphereCollider.h"
 #include "PlaneCollider.h"
+#include "ColliderTracker.h"
 #include "CollisionChecker.h"
 #include "CollisionPusher.h"
 #include "TrackBall.h"
+#include "Astronaut.h"
+#include "AstroAI.h"
+#include "AstronautHandler.h"
+#include "Time.h"
+#include "Animation.h"
+
+#include <utility>
 
 class Window
 {
@@ -37,24 +45,24 @@ public:
 	static const glm::vec3 UP;
 
 	static float time;
-	static float deltaTime;
 	static float moveForward;
 	static float moveBackward;
 	static float strafeLeft;
 	static float strafeRight;
 
 	static bool mouseRotation;
+	static bool mouseRotationVertical;
 	static double mouseX;
 
 	static TrackBall* trackBall;
 
+	static Astronaut* playerAstronaut;
 	static Controller* playerController;
-	static Collider* redCollider;
-	static Collider* pinkCollider;
-	static Collider* whiteCollider;
-	static std::vector<Collider*> obstacleColliders;
+	static ColliderTracker* colliderTracker;
 	static CollisionChecker* collisionChecker;
 	static CollisionPusher* collisionPusher;
+
+	static AstronautHandler* astroHandler;
 
 	// Shader Program ID
 	static GLuint phongShader;
@@ -66,6 +74,8 @@ public:
 	static Geometry* astronaut_idle;
 	static Geometry* astronaut_movingOne;
 	static Geometry* astronaut_movingTwo;
+	static Animation* idle;
+	static Animation* walking;
 
 	// Materials
 	static Materials* lobbyMat;

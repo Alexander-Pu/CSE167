@@ -26,6 +26,7 @@ void CollisionPusher::resolveCollision(Collider* colliderOne, Collider* collider
 		float currentDistance = glm::distance(sphereColliderOne->getWorldCenter(), sphereColliderTwo->getWorldCenter());
 
 		// We want to assume two is the immovable object
+		// TODO: Handle both non kinematic
 		glm::vec3 moveVector = direction * (sumRadii - currentDistance);
 
 		// no vertical movement

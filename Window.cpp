@@ -12,24 +12,24 @@ const glm::vec3 Window::RIGHT = glm::vec3(1, 0, 0);
 const glm::vec3 Window::UP = glm::vec3(0, 1, 0);
 
 float Window::time = 0;
-float Window::deltaTime = 0.1;
+float Time::deltaTime = .01;
 float Window::moveForward = 0;
 float Window::moveBackward = 0;
 float Window::strafeLeft = 0;
 float Window::strafeRight = 0;
 
 bool Window::mouseRotation = false;
+bool Window::mouseRotationVertical = true;
 double Window::mouseX = 0;
 
 TrackBall* Window::trackBall;
 
-Controller* Window::playerController;
-Collider* Window::redCollider;
-Collider* Window::pinkCollider;
-Collider* Window::whiteCollider;
-std::vector<Collider*> Window::obstacleColliders;
+Astronaut* Window::playerAstronaut;
+ColliderTracker* Window::colliderTracker;
 CollisionChecker* Window::collisionChecker;
 CollisionPusher* Window::collisionPusher;
+
+AstronautHandler* Window::astroHandler;
 
 // Shader Program ID
 GLuint Window::phongShader;
@@ -41,6 +41,8 @@ Geometry* Window::lobby;
 Geometry* Window::astronaut_idle;
 Geometry* Window::astronaut_movingOne;
 Geometry* Window::astronaut_movingTwo;
+Animation* Window::idle;
+Animation* Window::walking;
 
 // Materials
 Materials* Window::lobbyMat;
@@ -113,32 +115,25 @@ bool Window::initializeObjects()
 	astronaut_movingTwo = new TriangleGeometry("Objects/amongus_astro_moving2.obj");
 	astronaut_movingTwo->setTexture(solidTexture);
 
+	std::vector<Geometry*> idleFrames;
+	idleFrames.push_back(astronaut_idle);
+
+	std::vector<Geometry*> walkingFrames;
+	walkingFrames.push_back(astronaut_idle);
+	walkingFrames.push_back(astronaut_movingOne);
+	walkingFrames.push_back(astronaut_idle);
+	walkingFrames.push_back(astronaut_movingTwo);
+
 	//Place objects in world
 	world = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
 	world->addChild(lobby);
 
 	toonWorld = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0));
 
-	Transform* redAstronaut = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, .5, 10));
-	redAstronaut->addChild(astronaut_idle);
-	Materials* redMat = new Materials(hexToRGB(0xC51211), glm::vec3(1), glm::vec3(1), 8);
-	redAstronaut->setMaterials(redMat);
-	toonWorld->addChild(redAstronaut);
-
-	trackBall = new TrackBall();
-	playerController = new Controller(redAstronaut);
-
-	Transform* pinkAstronaut = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, .4, 8));
-	pinkAstronaut->addChild(astronaut_movingOne);
-	Materials* pinkMat = new Materials(hexToRGB(0xEC54BB), glm::vec3(1), glm::vec3(1), 8);
-	pinkAstronaut->setMaterials(pinkMat);
-	toonWorld->addChild(pinkAstronaut);
-
-	Transform* whiteAstronaut = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(-10, .4, 11));
-	whiteAstronaut->addChild(astronaut_movingTwo);
-	Materials* whiteMat = new Materials(hexToRGB(0xD6DFF1), glm::vec3(1), glm::vec3(1), 8);
-	whiteAstronaut->setMaterials(whiteMat);
-	toonWorld->addChild(whiteAstronaut);
+	// Collider tracking
+	colliderTracker = new ColliderTracker();
+	collisionChecker = new CollisionChecker();
+	collisionPusher = new CollisionPusher();
 
 	// Boxes
 	Transform* leftBox = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(-9.6, .4, 11.4));
@@ -151,8 +146,8 @@ bool Window::initializeObjects()
 	rightBox->addChild(rightBoxCollider);
 	toonWorld->addChild(rightBox);
 
-	obstacleColliders.push_back(leftBoxCollider);
-	obstacleColliders.push_back(rightBoxCollider);
+	colliderTracker->addCollider(leftBoxCollider);
+	colliderTracker->addCollider(rightBoxCollider);
 
 	// Walls
 	PlaneCollider* leftWallCollider = new PlaneCollider(world, glm::vec3(-16.25, 0, 0), glm::vec3(1, 0, 0));
@@ -161,29 +156,43 @@ bool Window::initializeObjects()
 	world->addChild(rightWallCollider);
 	PlaneCollider* topWallCollider = new PlaneCollider(world, glm::vec3(0, 0, 3), glm::vec3(0, 0, 1));
 	world->addChild(topWallCollider);
-	PlaneCollider* botWallCollider = new PlaneCollider(world, glm::vec3(0, 0, 19.8), glm::vec3(0, 0, -1));
+	PlaneCollider* botWallCollider = new PlaneCollider(world, glm::vec3(0, 0, 21), glm::vec3(0, 0, -1));
 	world->addChild(botWallCollider);
 	PlaneCollider* leftCornerWallCollider = new PlaneCollider(world, glm::vec3(-14, 0, 18), glm::vec3(1, 0, -1));
 	world->addChild(leftCornerWallCollider);
 	PlaneCollider* rightCornerWallCollider = new PlaneCollider(world, glm::vec3(14, 0, 18), glm::vec3(-1, 0, -1));
 	world->addChild(rightCornerWallCollider);
-	obstacleColliders.push_back(leftWallCollider);
-	obstacleColliders.push_back(rightWallCollider);
-	obstacleColliders.push_back(topWallCollider);
-	obstacleColliders.push_back(botWallCollider);
-	obstacleColliders.push_back(leftCornerWallCollider);
-	obstacleColliders.push_back(rightCornerWallCollider);
+
+	colliderTracker->addCollider(leftWallCollider);
+	colliderTracker->addCollider(rightWallCollider);
+	colliderTracker->addCollider(topWallCollider);
+	colliderTracker->addCollider(botWallCollider);
+	colliderTracker->addCollider(leftCornerWallCollider);
+	colliderTracker->addCollider(rightCornerWallCollider);
+
+	// Player
+	playerAstronaut = new Astronaut(glm::vec3(0, .5, 8), idleFrames, walkingFrames, hexToRGB(0xC51211));
+	toonWorld->addChild(playerAstronaut->getTransform());
+	colliderTracker->addCollider(playerAstronaut->getCollider());
+
+	trackBall = new TrackBall();
+
+	// NPCs
+	astroHandler = new AstronautHandler(idleFrames, walkingFrames);
+	for (auto astronaut : astroHandler->getAstronauts()) {
+		toonWorld->addChild(astronaut->getTransform());
+		colliderTracker->addCollider(astronaut->getCollider());
+	}
 	
 	// Initialize camera
-	cameraLobbyTransform = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, 0, 0));
-	world->addChild(cameraLobbyTransform);
-	cameraTransform = new Transform(glm::mat4(1), glm::rotate((5.0f / 4.0f) * glm::quarter_pi<float>(), glm::vec3(-1.0, 0.0, 0.0)), glm::vec3(0, 40, 25));
+	cameraLobbyTransform = new Transform(glm::mat4(1), glm::mat4(1), glm::vec3(0, 0, 5));
+	cameraTransform = new Transform(glm::mat4(1), glm::rotate((5.0f / 4.0f) * glm::quarter_pi<float>(), glm::vec3(-1.0, 0.0, 0.0)), glm::vec3(0, 40, 30));
 	cameraLobbyTransform->addChild(cameraTransform);
 	mainCamera = new Camera(shaders, glm::radians(60.0), double(Window::width) / (double)Window::height, 1, 1000, true);
 	cameraTransform->addChild(mainCamera);
 
-	playerCameraTransform = new Transform(glm::mat4(1), glm::rotate(2 * glm::half_pi<float>(), Window::UP), glm::vec3(0, 2.9, -.2));
-	redAstronaut->addChild(playerCameraTransform);
+	playerCameraTransform = new Transform(glm::mat4(1), glm::rotate(2 * glm::half_pi<float>(), Window::UP), glm::vec3(0, 2.3, -.2));
+	playerAstronaut->getTransform()->addChild(playerCameraTransform);
 	playerCamera = new Camera(shaders, glm::radians(60.0), double(Window::width) / (double)Window::height, 1, 1000, false);
 	playerCameraTransform->addChild(playerCamera);
 
@@ -200,25 +209,19 @@ bool Window::initializeObjects()
 	pointLight = new PointLight(Window::shaders, glm::vec3(0), glm::vec3(1), glm::vec3(1, .005, 0.0));
 	pointLightTransform->addChild(pointLight);
 
-	Transform* flashLightTransform = new Transform(glm::scale(glm::vec3(.1)), glm::rotate(glm::half_pi<float>(), glm::vec3(-1, 0, 0)), glm::vec3(0, 2, 1));
+	Transform* flashLightTransform = new Transform(glm::scale(glm::vec3(.1)), glm::rotate(glm::half_pi<float>(), glm::vec3(-1, 0, 0)), glm::vec3(0, 1.5, 1));
 	Geometry* cone = new TriangleGeometry("Objects/cone.objmodel");
 	cone->setMaterials(solidWhiteMat);
 	cone->setTexture(solidTexture);
 	flashLightTransform->addChild(cone);
-	redAstronaut->addChild(flashLightTransform);
+	playerAstronaut->getTransform()->addChild(flashLightTransform);
 
 	spotLight = new SpotLight(Window::shaders, glm::vec3(1), glm::vec3(1, .005, 0.0), 0.3, 0);
 	flashLightTransform->addChild(spotLight);
 
-	redCollider = new SphereCollider(redAstronaut, glm::vec3(0, 1, 0), 1.1, false);
-	redAstronaut->addChild(redCollider);
-	pinkCollider = new SphereCollider(pinkAstronaut, glm::vec3(0, 1, 0), 1.1, true);
-	pinkAstronaut->addChild(pinkCollider);
-	obstacleColliders.push_back(pinkCollider);
-	whiteCollider = new SphereCollider(whiteAstronaut, glm::vec3(0, 1, 0), 1.1, true);
-	whiteAstronaut->addChild(whiteCollider);
-	collisionChecker = new CollisionChecker();
-	collisionPusher = new CollisionPusher();
+	float currentFrame = glfwGetTime();
+	Time::deltaTime = currentFrame - time;
+	time = currentFrame;
 
 	return true;
 }
@@ -239,6 +242,7 @@ void Window::cleanUp()
 	delete toonWorld;
 
 	delete trackBall;
+	delete colliderTracker;
 	delete collisionChecker;
 	delete collisionPusher;
 
@@ -326,8 +330,15 @@ void Window::resizeCallback(GLFWwindow* window, int width, int height)
 void Window::idleCallback()
 {
 	float currentFrame = glfwGetTime();
-	deltaTime = currentFrame - time;
+	Time::deltaTime = currentFrame - time;
 	time = currentFrame;
+
+	astroHandler->handleDeactivate();
+	astroHandler->handleActivate();
+
+	world->update(glm::mat4(1));
+	toonWorld->update(glm::mat4(1));
+	cameraLobbyTransform->update(glm::mat4(1));
 
 	float forwardMovement = Window::moveForward - Window::moveBackward;
 	float sidewaysMovement = Window::strafeRight - Window::strafeLeft;
@@ -338,23 +349,64 @@ void Window::idleCallback()
 
 		// First person
 		if (Window::firstPerson) {
-			moveDir = glm::normalize(forwardMovement * playerController->getTransform()->getForward() + sidewaysMovement * playerController->getTransform()->getRight());
+			moveDir = glm::normalize(forwardMovement * playerAstronaut->getTransform()->getForward() + sidewaysMovement * playerAstronaut->getTransform()->getRight());
 		}
 		else {
 			// Third Person
-			moveDir = glm::normalize(forwardMovement * Window::FORWARD + sidewaysMovement * Window::RIGHT);
+			glm::vec3 camForward = mainCamera->getForward();
+			camForward.y = 0;
+			if (glm::length(camForward) == 0) {
+				camForward.y = 1;
+			}
+
+			glm::vec3 camRight = glm::cross(camForward, Window::UP);
+
+			moveDir = glm::normalize(forwardMovement * camForward + sidewaysMovement * camRight);
 		}
 
-		playerController->moveTransform(moveDir, !Window::firstPerson, Window::deltaTime);
+		playerAstronaut->move(moveDir, !Window::firstPerson);
+	}
+	else {
+		playerAstronaut->stop();
 	}
 
-	world->update(glm::mat4(1));
-	toonWorld->update(glm::mat4(1));
+	astroHandler->updateActive();
 
-	for (Collider* collider : obstacleColliders) {
-		if (collisionChecker->collides(redCollider, collider)) {
-			collisionPusher->resolveCollision(redCollider, collider);
+	// Check for collisions
+	std::vector<std::pair<Collider*, Collider*>> collidingColliders;
+	for (int i = 0; i < colliderTracker->getNonKinematicColliders().size(); i++) {
+		Collider* collider = colliderTracker->getNonKinematicColliders()[i];
+
+		for (int j = i + 1; j < colliderTracker->getNonKinematicColliders().size(); j++) {
+			Collider* otherNonKinematicCollider = colliderTracker->getNonKinematicColliders()[j];
+			if (collider == otherNonKinematicCollider) {
+				continue;
+			}
+
+			if (collisionChecker->collides(collider, otherNonKinematicCollider)) {
+				std::pair<Collider*, Collider*> colliderPair;
+				colliderPair.first = collider;
+				colliderPair.second = otherNonKinematicCollider;
+				collidingColliders.push_back(colliderPair);
+			}
 		}
+
+		for (Collider* kinematicCollider : colliderTracker->getKinematicColliders()) {
+			if (collisionChecker->collides(collider, kinematicCollider)) {
+				std::pair<Collider*, Collider*> colliderPair;
+				colliderPair.first = collider;
+				colliderPair.second = kinematicCollider;
+				collidingColliders.push_back(colliderPair);
+			}
+		}
+	}
+
+	// Update AI
+	astroHandler->handleCollisions(collidingColliders);
+
+	// Resolve collisions
+	for (std::pair<Collider*, Collider*> colliderPair : collidingColliders) {
+		collisionPusher->resolveCollision(colliderPair.first, colliderPair.second);
 	}
 }
 
@@ -366,6 +418,8 @@ void Window::displayCallback(GLFWwindow* window)
 	world->draw(phongShader, glm::mat4(1));
 
 	toonWorld->draw(toonShader, glm::mat4(1));
+
+	cameraLobbyTransform->draw(toonShader, glm::mat4(1));
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -396,6 +450,9 @@ void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 			break;
 		case GLFW_KEY_S:
 			Window::moveBackward = 1;
+			break;
+		case GLFW_KEY_E:
+			Window::mouseRotationVertical = !mouseRotationVertical;
 			break;
 		case GLFW_KEY_R:
 			Window::firstPerson = !Window::firstPerson;
@@ -442,7 +499,6 @@ void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	GLfloat newFov = glm::min(glm::max(glm::radians(5.0), fov - glm::radians(yoffset)), glm::radians(60.0));
 	//mainCamera->setFov(newFov);
 
-	glm::vec3 moveDirection = mainCamera->getForward();
 	cameraLobbyTransform->setScale(glm::scale(cameraLobbyTransform->getScale(), glm::vec3(1 - (.01 * glm::sign(yoffset)))));
 }
 
@@ -475,10 +531,21 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 
 	std::shared_ptr<TrackBallReturn> returnValues = trackBall->handleMove(xpos, Window::width, ypos, Window::height);
 	if (firstPerson) {
-		playerController->getTransform()->applyRotation(glm::rotate(glm::radians(mouseXMovement), -Window::UP));
+		playerAstronaut->getTransform()->applyRotation(glm::rotate(glm::radians(mouseXMovement), -Window::UP));
 	}
 	else if (Window::mouseRotation) {
-		cameraLobbyTransform->applyLocalRotation(glm::rotate(returnValues.get()->angle, -returnValues.get()->rotationAxis));
+		glm::vec3 rotationAxis = returnValues.get()->rotationAxis;
+		glm::vec3 horizontalRotation = glm::vec3(0, rotationAxis.y < 0 ? 1 : -1, 0);
+		glm::vec3 verticalRotation = glm::vec3(rotationAxis.x < 0 ? 1 : -1, 0, 0);
+
+		glm::vec3 axis = Window::mouseRotationVertical ? verticalRotation : horizontalRotation;
+
+		if (Window::mouseRotationVertical) {
+			cameraLobbyTransform->applyLocalRotation(glm::rotate(returnValues.get()->angle, axis));
+		}
+		else {
+			cameraLobbyTransform->applyRotation(glm::rotate(returnValues.get()->angle, axis));
+		}
 	}
 }
 

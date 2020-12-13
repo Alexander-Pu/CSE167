@@ -2,6 +2,7 @@
 #define _CONTROLLER_H_
 
 #include "Transform.h"
+#include "Time.h"
 
 class Controller
 {
@@ -14,7 +15,7 @@ public:
 	Controller(Transform* transform);
 	~Controller();
 
-	void moveTransform(glm::vec3 direction, bool rotate, float deltaTime);
+	void moveTransform(glm::vec3 direction, bool rotate);
 	Transform* getTransform() { return transform; }
 };
 
