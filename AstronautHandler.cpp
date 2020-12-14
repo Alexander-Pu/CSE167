@@ -1,6 +1,7 @@
 #include "AstronautHandler.h"
 
-AstronautHandler::AstronautHandler(std::vector<Geometry*>& idle, std::vector<Geometry*>& walking)
+AstronautHandler::AstronautHandler(ParticleSystem* particleSystem, std::vector<Geometry*>& idle, std::vector<Geometry*>& walking)
+	: particleSystem(particleSystem)
 {
 	Astronaut* blackAstronaut = new Astronaut(getSpawnPoint(), idle, walking, hexToRGB(0x3E474E));
 	AstroAI* blackAI = new AstroAI(blackAstronaut);
@@ -103,12 +104,15 @@ void AstronautHandler::handleActivate() {
 	}
 
 	if (numActive < 9) {
-		if (rand() % 10000 < 2) {
+		if (rand() % 100000 < 2) {
 			AstroAI* ai = inactive[rand() % inactive.size()];
 			glm::vec3 location = ai->getAstronaut()->getTransform()->getLocation();
 			location.y = 0.4;
 			ai->getAstronaut()->getTransform()->setLocation(location);
+			ai->getAstronaut()->getTransform()->update(glm::mat4(1));
 			astronautToActive[ai] = true;
+			ai->setState(AIState::SPAWNING);
+			handleSpawnParticles(ai->getAstronaut());
 		}
 	}
 }
@@ -126,10 +130,45 @@ void AstronautHandler::handleDeactivate() {
 	if (numActive > 0) {
 		if (rand() % 1000000 < 2) {
 			AstroAI* ai = active[rand() % active.size()];
+
+			// Don't despawn astronauts that are spawning in
+			if (ai->getState() == AIState::SPAWNING) {
+				return;
+			}
+
 			glm::vec3 location = ai->getAstronaut()->getTransform()->getLocation();
 			location.y = 300;
 			ai->getAstronaut()->getTransform()->setLocation(location);
 			astronautToActive[ai] = false;
+			handleDespawnParticles(ai->getAstronaut());
 		}
+	}
+}
+
+void AstronautHandler::handleSpawnParticles(Astronaut* astronaut) {
+	for (int i = 0; i < 100; i++) {
+		glm::vec3 particleVelocity = glm::normalize(glm::vec3(rand() % 1000 - 500, rand() % 1000 - 500, rand() % 1000 - 500));
+		glm::vec3 location = astronaut->getTransform()->getLocation();
+		location.y = 3;
+		float lifeSpan = 3;
+		particleSystem->addParticle(location + lifeSpan * particleVelocity, -particleVelocity, [](glm::vec3 x) {return x; }, lifeSpan, glm::vec3(1), astronaut->getColor());
+	}
+}
+
+velocity_alterer alterer = [](glm::vec3 velocity) {
+	glm::vec3 newVelocity = velocity;
+	newVelocity.x += float((rand() % 1000 - 500.0)) / 2000.0;
+	newVelocity.y += float((rand() % 1000 - 500.0)) / 2000.0;
+	newVelocity.z += float((rand() % 1000 - 500.0)) / 2000.0;
+	return newVelocity;
+};
+
+void AstronautHandler::handleDespawnParticles(Astronaut* astronaut) {
+	for (int i = 0; i < 100; i++) {
+		glm::vec3 particleVelocity = 3.0f * glm::vec3(0, 1, 0);
+		glm::vec3 location = astronaut->getTransform()->getLocation();
+		location.y = 2;
+		float lifeSpan = .8;
+		particleSystem->addParticle(location, particleVelocity, alterer, lifeSpan, astronaut->getColor(), glm::vec3(1, 0, 0));
 	}
 }

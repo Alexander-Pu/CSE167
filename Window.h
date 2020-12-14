@@ -26,6 +26,7 @@
 #include "AstronautHandler.h"
 #include "Time.h"
 #include "Animation.h"
+#include "ParticleSystem.h"
 
 #include <utility>
 
@@ -67,6 +68,7 @@ public:
 	// Shader Program ID
 	static GLuint phongShader;
 	static GLuint toonShader;
+	static GLuint particleShader;
 	static std::vector<GLuint> shaders;
 
 	// Models to Render
@@ -100,6 +102,9 @@ public:
 	// Lights
 	static PointLight* pointLight;
 	static SpotLight* spotLight;
+
+	// Particles
+	static ParticleSystem* particleSystem;
 
 	// Constructors and Destructors
 	static bool initializeProgram();

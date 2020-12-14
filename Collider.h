@@ -13,9 +13,11 @@ class Collider : public Node
 {
 protected:
 	Transform* transform;
+	bool kinematic;
 public:
 	virtual ColliderType getType() = 0;
-	virtual bool isKinematic() = 0;
+	bool isKinematic() { return kinematic; }
+	void setKinematic(bool isKinematic) { kinematic = isKinematic; }
 	Transform* getTransform() { return transform; }
 };
 #endif

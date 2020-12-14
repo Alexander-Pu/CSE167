@@ -1,6 +1,7 @@
 #include "Astronaut.h"
 
 Astronaut::Astronaut(glm::vec3 spawnLocation, std::vector<Geometry*>& idleFrames, std::vector<Geometry*>& walkingFrames, glm::vec3 color)
+	: color(color)
 {
 	transform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), spawnLocation);
 	idle = new Animation(idleFrames, 1);
@@ -32,5 +33,10 @@ void Astronaut::move(glm::vec3 moveDir, bool rotate) {
 
 void Astronaut::stop() {
 	idle->setActive(true);
+	walking->setActive(false);
+}
+
+void Astronaut::hide() {
+	idle->setActive(false);
 	walking->setActive(false);
 }

@@ -20,7 +20,6 @@ public:
 	glm::vec3 getWorldPoint() { return worldPoint; }
 	glm::vec3 getWorldNormal() { return worldNormal; }
 	ColliderType getType() { return ColliderType::PLANE; }
-	bool isKinematic() { return true; }
 };
 
 #endif

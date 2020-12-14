@@ -3,7 +3,7 @@
 AstroAI::AstroAI(Astronaut* astronaut)
 	: astronaut(astronaut)
 	, state(AIState::IDLE)
-	, timeSinceLastStateChange(0)
+	, timeSinceLastStateChange(4)
 	, desiredDir(glm::normalize(glm::vec3(rand(), 0, rand())))
 {
 }
@@ -13,27 +13,44 @@ AstroAI::~AstroAI()
 }
 
 void AstroAI::setState(AIState newState) {
+	// Minimum 3 seconds between each state change
+	if (timeSinceLastStateChange < 3 && !(newState == AIState::SPAWNING)) {
+		return;
+	}
+
 	state = newState;
 	timeSinceLastStateChange = 0;
+	if (state == AIState::SPAWNING) {
+		astronaut->hide();
+	}
+	if (state == AIState::IDLE) {
+		astronaut->stop();
+	}
 }
 
 void AstroAI::update() {
+	if (state == AIState::SPAWNING) {
+		setState(AIState::MOVING);
+	}
+
+	if (state == AIState::MOVING) {
+		astronaut->move(desiredDir, true);
+	}
+
+	timeSinceLastStateChange += Time::deltaTime;
+
+	// State changes
 	if (state == AIState::IDLE) {
-		if (rand() % 10000 < 2 && timeSinceLastStateChange > 1) {
+		if (rand() % 10000 < 2) {
 			setState(AIState::MOVING);
 		}
 	}
 
 	if (state == AIState::MOVING) {
-		astronaut->move(desiredDir, true);
-
-		if (rand() % 10000 < 2 && timeSinceLastStateChange > 1) {
+		if (rand() % 10000 < 2) {
 			setState(AIState::IDLE);
-			astronaut->stop();
 		}
 	}
-
-	timeSinceLastStateChange += Time::deltaTime;
 }
 
 void AstroAI::handleCollisions(std::vector<std::pair<Collider*, Collider*>> colliderPairs) {

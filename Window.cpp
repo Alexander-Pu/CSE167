@@ -34,6 +34,7 @@ AstronautHandler* Window::astroHandler;
 // Shader Program ID
 GLuint Window::phongShader;
 GLuint Window::toonShader;
+GLuint Window::particleShader;
 std::vector<GLuint> Window::shaders;
 
 // Models to Render
@@ -68,11 +69,16 @@ Camera* Window::playerCamera = NULL;
 PointLight* Window::pointLight;
 SpotLight* Window::spotLight;
 
+// Particles
+ParticleSystem* Window::particleSystem;
+
 bool Window::initializeProgram() {
 	phongShader = LoadShaders("shaders/phong_illumination.vert", "shaders/phong_illumination.frag");
 	toonShader = LoadShaders("shaders/toon.vert", "shaders/toon.frag");
+	particleShader = LoadShaders("shaders/particle.vert", "shaders/particle.frag");
 	shaders.push_back(phongShader);
 	shaders.push_back(toonShader);
+	shaders.push_back(particleShader);
 	bool shadersLoaded = true;
 	for (GLuint shader : shaders) {
 		shadersLoaded = shadersLoaded | shader;
@@ -178,7 +184,8 @@ bool Window::initializeObjects()
 	trackBall = new TrackBall();
 
 	// NPCs
-	astroHandler = new AstronautHandler(idleFrames, walkingFrames);
+	particleSystem = new ParticleSystem(200);
+	astroHandler = new AstronautHandler(particleSystem, idleFrames, walkingFrames);
 	for (auto astronaut : astroHandler->getAstronauts()) {
 		toonWorld->addChild(astronaut->getTransform());
 		colliderTracker->addCollider(astronaut->getCollider());
@@ -372,6 +379,9 @@ void Window::idleCallback()
 
 	astroHandler->updateActive();
 
+	// Update particles
+	particleSystem->update();
+
 	// Check for collisions
 	std::vector<std::pair<Collider*, Collider*>> collidingColliders;
 	for (int i = 0; i < colliderTracker->getNonKinematicColliders().size(); i++) {
@@ -420,6 +430,8 @@ void Window::displayCallback(GLFWwindow* window)
 	toonWorld->draw(toonShader, glm::mat4(1));
 
 	cameraLobbyTransform->draw(toonShader, glm::mat4(1));
+
+	particleSystem->draw(particleShader);
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -531,7 +543,7 @@ void Window::mouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 
 	std::shared_ptr<TrackBallReturn> returnValues = trackBall->handleMove(xpos, Window::width, ypos, Window::height);
 	if (firstPerson) {
-		playerAstronaut->getTransform()->applyRotation(glm::rotate(glm::radians(mouseXMovement), -Window::UP));
+		playerAstronaut->getTransform()->applyRotation(glm::rotate(0.75f * glm::radians(mouseXMovement), -Window::UP));
 	}
 	else if (Window::mouseRotation) {
 		glm::vec3 rotationAxis = returnValues.get()->rotationAxis;

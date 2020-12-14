@@ -2,7 +2,7 @@
 
 Controller::Controller(Transform* transform)
 	: transform(transform)
-	, moveSpeed(1000)
+	, moveSpeed(15)
 	, rotationSpeed(8 * glm::pi<float>())
 {
 }

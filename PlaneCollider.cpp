@@ -7,6 +7,7 @@ PlaneCollider::PlaneCollider(Transform* parentTransform, glm::vec3 point, glm::v
 	, worldNormal(NULL)
 {
 	transform = parentTransform;
+	kinematic = true;
 }
 
 PlaneCollider::~PlaneCollider()

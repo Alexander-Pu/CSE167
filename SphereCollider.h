@@ -9,10 +9,9 @@ private:
 	glm::vec3 center;
 	float radius;
 	glm::vec3 worldCenter;
-	bool kinematic;
 
 public:
-	SphereCollider(Transform* parentTransform, glm::vec3 center, float radius, bool kinematic);
+	SphereCollider(Transform* parentTransform, glm::vec3 center, float radius, bool colliderIsKinematic);
 	~SphereCollider();
 
 	void draw(GLuint shader, const glm::mat4& C);
@@ -20,7 +19,6 @@ public:
 	glm::vec3 getWorldCenter() { return worldCenter; }
 	float getRadius() { return radius; }
 	ColliderType getType() { return ColliderType::SPHERE; }
-	bool isKinematic() { return kinematic; }
 };
 
 #endif

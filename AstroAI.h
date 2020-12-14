@@ -12,6 +12,7 @@
 #include <cstdlib>
 
 enum class AIState {
+	SPAWNING,
 	IDLE,
 	MOVING
 };
@@ -31,6 +32,7 @@ public:
 	void update();
 	void handleCollisions(std::vector<std::pair<Collider*, Collider*>> colliderPairs);
 	Astronaut* getAstronaut() { return astronaut; }
+	AIState getState() { return state; }
 };
 
 #endif

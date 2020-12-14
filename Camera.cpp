@@ -20,6 +20,10 @@ Camera::~Camera()
 void Camera::draw(GLuint shader, const glm::mat4& C)
 {
 	if (active) {
+		eyePos = glm::vec3(C * glm::vec4(0, 0, 0, 1));
+		forward = glm::vec3(C * glm::vec4(0, 0, -1, 0));
+		up = glm::vec3(C * glm::vec4(0, 1, 0, 0));
+
 		glm::mat4 projection = glm::perspective(fov, aspect, near, far);
 		glm::mat4 view = glm::lookAt(eyePos, eyePos + forward, up);
 
@@ -35,7 +39,4 @@ void Camera::draw(GLuint shader, const glm::mat4& C)
 
 void Camera::update(const glm::mat4& C)
 {
-	eyePos = glm::vec3(C * glm::vec4(0, 0, 0, 1));
-	forward = glm::vec3(C * glm::vec4(0, 0, -1, 0));
-	up = glm::vec3(C * glm::vec4(0, 1, 0, 0));
 }

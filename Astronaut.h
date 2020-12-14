@@ -14,6 +14,7 @@ private:
 	Transform* transform;
 	Animation* idle;
 	Animation* walking;
+	glm::vec3 color;
 	Materials* materials;
 	Collider* collider;
 	Controller* controller;
@@ -23,8 +24,10 @@ public:
 
 	Transform* getTransform() { return transform; }
 	Collider* getCollider() { return collider; }
+	glm::vec3 getColor() { return color; }
 	void move(glm::vec3 moveDir, bool rotate);
 	void stop();
+	void hide();
 };
 
 #endif

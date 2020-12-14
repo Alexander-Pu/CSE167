@@ -1,12 +1,12 @@
 #include "SphereCollider.h"
 
-SphereCollider::SphereCollider(Transform* parentTransform, glm::vec3 center, float radius, bool kinematic)
+SphereCollider::SphereCollider(Transform* parentTransform, glm::vec3 center, float radius, bool colliderIsKinematic)
 	: center(center)
 	, radius(radius)
 	, worldCenter(NULL)
-	, kinematic(kinematic)
 {
 	transform = parentTransform;
+	kinematic = colliderIsKinematic;
 }
 
 SphereCollider::~SphereCollider()
