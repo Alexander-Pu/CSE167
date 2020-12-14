@@ -5,7 +5,7 @@ Astronaut::Astronaut(glm::vec3 spawnLocation, std::vector<Geometry*>& idleFrames
 {
 	transform = new Transform(glm::scale(glm::vec3(1)), glm::mat4(1), spawnLocation);
 	idle = new Animation(idleFrames, 1);
-	walking = new Animation(walkingFrames, .2);
+	walking = new Animation(walkingFrames, .1);
 	transform->addChild(idle);
 	transform->addChild(walking);
 	materials = new Materials(color, glm::vec3(1), glm::vec3(1), 8);

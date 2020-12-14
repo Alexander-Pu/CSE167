@@ -72,6 +72,10 @@ SpotLight* Window::spotLight;
 // Particles
 ParticleSystem* Window::particleSystem;
 
+// Sound
+ISoundEngine* Window::soundEngine;
+ISound* Window::walkingSound;
+
 bool Window::initializeProgram() {
 	phongShader = LoadShaders("shaders/phong_illumination.vert", "shaders/phong_illumination.frag");
 	toonShader = LoadShaders("shaders/toon.vert", "shaders/toon.frag");
@@ -96,6 +100,13 @@ bool Window::initializeProgram() {
 	// Enable face culling to only show "front" of faces.
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+
+	soundEngine = createIrrKlangDevice();
+	if (!soundEngine) {
+		return false;
+	}
+
+	walkingSound = soundEngine->play2D("Sounds/the-among-us-walking-sound-effect.mp3", true, true, true);
 
 	return true;
 }
@@ -184,8 +195,8 @@ bool Window::initializeObjects()
 	trackBall = new TrackBall();
 
 	// NPCs
-	particleSystem = new ParticleSystem(200);
-	astroHandler = new AstronautHandler(particleSystem, idleFrames, walkingFrames);
+	particleSystem = new ParticleSystem(500);
+	astroHandler = new AstronautHandler(particleSystem, soundEngine, idleFrames, walkingFrames);
 	for (auto astronaut : astroHandler->getAstronauts()) {
 		toonWorld->addChild(astronaut->getTransform());
 		colliderTracker->addCollider(astronaut->getCollider());
@@ -252,6 +263,9 @@ void Window::cleanUp()
 	delete colliderTracker;
 	delete collisionChecker;
 	delete collisionPusher;
+
+	soundEngine->drop();
+	delete soundEngine;
 
 	// Delete the shader program.
 	glDeleteProgram(phongShader);
@@ -372,9 +386,14 @@ void Window::idleCallback()
 		}
 
 		playerAstronaut->move(moveDir, !Window::firstPerson);
+		walkingSound->setIsPaused(false);
+		if (walkingSound->getPlayPosition() < 1000 || walkingSound->getPlayPosition() > 8000) {
+			walkingSound->setPlayPosition(2000);
+		}
 	}
 	else {
 		playerAstronaut->stop();
+		walkingSound->setIsPaused(true);
 	}
 
 	astroHandler->updateActive();

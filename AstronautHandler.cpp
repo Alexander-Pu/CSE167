@@ -1,7 +1,8 @@
 #include "AstronautHandler.h"
 
-AstronautHandler::AstronautHandler(ParticleSystem* particleSystem, std::vector<Geometry*>& idle, std::vector<Geometry*>& walking)
+AstronautHandler::AstronautHandler(ParticleSystem* particleSystem, ISoundEngine* soundEngine, std::vector<Geometry*>& idle, std::vector<Geometry*>& walking)
 	: particleSystem(particleSystem)
+	, soundEngine(soundEngine)
 {
 	Astronaut* blackAstronaut = new Astronaut(getSpawnPoint(), idle, walking, hexToRGB(0x3E474E));
 	AstroAI* blackAI = new AstroAI(blackAstronaut);
@@ -113,6 +114,7 @@ void AstronautHandler::handleActivate() {
 			astronautToActive[ai] = true;
 			ai->setState(AIState::SPAWNING);
 			handleSpawnParticles(ai->getAstronaut());
+			soundEngine->play2D("Sounds/spawn.mp3");
 		}
 	}
 }
@@ -141,6 +143,7 @@ void AstronautHandler::handleDeactivate() {
 			ai->getAstronaut()->getTransform()->setLocation(location);
 			astronautToActive[ai] = false;
 			handleDespawnParticles(ai->getAstronaut());
+			soundEngine->play2D("Sounds/kill.mp3");
 		}
 	}
 }

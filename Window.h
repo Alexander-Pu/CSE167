@@ -27,8 +27,13 @@
 #include "Time.h"
 #include "Animation.h"
 #include "ParticleSystem.h"
+#include "irrKlang.h"
 
 #include <utility>
+
+#pragma comment(lib, "irrKlang.lib") // link with irrKlang.dll
+
+using namespace irrklang;
 
 class Window
 {
@@ -105,6 +110,10 @@ public:
 
 	// Particles
 	static ParticleSystem* particleSystem;
+
+	// Sound
+	static ISoundEngine* soundEngine;
+	static ISound* walkingSound;
 
 	// Constructors and Destructors
 	static bool initializeProgram();
